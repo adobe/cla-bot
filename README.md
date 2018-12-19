@@ -42,7 +42,7 @@ Get list of actions running on our namespace and see the logs
 
 ```
 wsk activation list
-wsk action get ACTIVATION-LIST-NUMBER
+wsk activation get ACTIVATION-LIST-NUMBER
 ```
 
 
