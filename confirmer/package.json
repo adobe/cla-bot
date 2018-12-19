@@ -1,10 +1,11 @@
 {
-  "name": "cla-bot",
+  "name": "confirmer",
   "version": "1.0.0",
   "description": "cla-bot checker for adobe ",
-  "main": "checker.js",
+  "main": "./checker.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node checker.js"
   },
   "repository": {
     "type": "git",

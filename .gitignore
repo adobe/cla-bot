@@ -1,2 +1,5 @@
 config.json
 node_modules
+.DS_Store
+checker.zip
+package-lock.json
