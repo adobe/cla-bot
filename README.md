@@ -1,14 +1,21 @@
 # CLA-BOT
 
-We have two actions in this repo. One under the checker folder which runs on every github pull request. Checker's job is to check if the user submitting the pull request has signed the CLA.
+This is a GitHub bot that checks that pull request issuers to [github.com/adobe](https://github.com/adobe) have signed the [Adobe CLA](http://opensource.adobe.com/cla.html).
 
-The second action is under the confirmer folder. This action will run on an agreement signed hook which comes from adobe sign. This action will pull the github username from the agreement and comment on any open PRs from that user on one of our supported github orgs. 
+## Overview
 
-For both actions, make sure to copy `config-sample.json` from the root into the folders and populate it with the correct information.
+This repo contains two actions, which are functions that run on a serverless (function as a service, or FaaS) platform:
 
-## Runtime actions
+ - `./checker` contains an action that runs on every [github.com/adobe](https://github.com/adobe) pull request open and close. Checker's job is to check if the user submitting the pull request has signed the CLA or if the user is an Adobe employee (by checking github.com/adobe organization membership).
+ - `./confirmer` contains an action that runs when an agreement on Adobe Sign is signed. This action will pull the github username of the signeefrom the agreement and comment on any open PRs from that user on one of our supported github orgs.
 
-These instructions assume you already have openwhisk and a runtime namespace setup. See [this workshop](https://hirenoble.github.io/Marriott-Workshop/) if you haven't. 
+## Requirements
+
+For both actions, make sure to copy `config-sample.json` from the root into the relevant folders, rename it to `config.json` and populate it with the correct information.
+
+## Runtime Actions
+
+These instructions assume you already have openwhisk and a runtime namespace setup. See [this workshop](https://hirenoble.github.io/Marriott-Workshop/) if you haven't.
 
 ### Deploy
 
@@ -38,11 +45,20 @@ wsk action get cla-checker --url
 
 ### Debug
 
-Get list of actions running on our namespace and see the logs
+Get list of actions running on our namespace:
 
 ```
 wsk activation list
+```
+
+Copy the most-recent-activation number related to your particular action and retrieve its logs:
+
+```
 wsk activation get ACTIVATION-LIST-NUMBER
 ```
 
+... convenience script to debug response body:
 
+```
+./debug ACTIVATION-LIST-NUMBER
+```
