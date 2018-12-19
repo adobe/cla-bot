@@ -21,13 +21,13 @@ zip -r checker.zip checker/.
 If you haven't created a runtime action yet, run the following command
 
 ```
-wsk action create cla-checker --kind nodejs:6 action.zip --web true
+wsk action create cla-checker --kind nodejs:6 checker.zip --web true
 ```
 
 If you need to update a runtime action, run the following command
 
 ```
-wsk action update cla-checker --kind nodejs:6 action.zip --web true
+wsk action update cla-checker --kind nodejs:6 checker.zip --web true
 ```
 
 Protip, run the following command to get the URL of the action to use for hooks
