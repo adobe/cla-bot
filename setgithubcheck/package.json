@@ -1,0 +1,19 @@
+{
+  "name": "setgithubcheck",
+  "version": "1.0.0",
+  "description": "cla-bot checker for adobe ",
+  "main": "./setgithubcheck.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node setgithubcheck.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.corp.adobe.com:OpenSourceAdvisoryBoard/cla-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "github-app": "^4.0.1"
+  }
+}
