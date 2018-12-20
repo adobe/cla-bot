@@ -103,7 +103,12 @@ function main (params) {
             if (error) return resolve({statusCode: 500, body: { error: error, reason: 'Error retrieving Adobe Sign agreements.' }});
             if (body.userAgreementList && body.userAgreementList.length) {
               // We have a few agreements to search through.
-              resolve({ body: JSON.stringify(body) });
+              var agreements = body.userAgreementList.filter(function (agreement) { return agreement.status === 'SIGNED'; });
+              // TODO: iterate through the agreements, retrieve formdata for
+              // each agreement, which is a csv (maybe we could pipe request
+              // into a csv parser that can handle streams?), parse the csv,
+              // extract data we need.
+              resolve({ body: agreements }); // protip: you can see this output from the github app's advanced tab when you dive into the 'deliveries'
             } else {
               // No agreements found, set the GitHub Check to fail
               ow.actions.invoke({
