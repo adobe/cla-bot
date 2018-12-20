@@ -65,7 +65,9 @@ function main (params) {
         }).catch(function (err) {
           resolve({statusCode: 500, body: { error: err, reason: 'Error during GitHub Check creation.' }});
         });
-      } else {
+      }
+    }).catch(function (err) {
+      if (err.code === 404 && err.message.indexOf('is not a member of the org') > -1) {
         // User is not a member of org, check if they signed CLA
         var options = {
           method: 'POST',
@@ -90,23 +92,47 @@ function main (params) {
             method: 'GET',
             url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements',
             qs: { query: user },
-            headers:
-            {
+            headers: {
               'cache-control': 'no-cache',
               'Access-Token': access_token
-            }
+            },
+            json: true
           };
 
           request(options, function (error, response, body) {
             if (error) return resolve({statusCode: 500, body: { error: error, reason: 'Error retrieving Adobe Sign agreements.' }});
-
-            console.log(body);
-            resolve({ body: JSON.stringify(body) });
+            if (body.userAgreementList && body.userAgreementList.length) {
+              // We have a few agreements to search through.
+              resolve({ body: JSON.stringify(body) });
+            } else {
+              // No agreements found, set the GitHub Check to fail
+              ow.actions.invoke({
+                name: 'cla-setgithubcheck',
+                blocking: true,
+                result: true,
+                params: {
+                  installation_id: installation_id,
+                  org: org,
+                  repo: repo,
+                  sha: commit_sha,
+                  status: 'completed',
+                  start_time: start_time,
+                  conclusion: 'action_required',
+                  details_url: 'http://opensource.adobe.com/cla.html',
+                  title: '✗ No Signed Agreements Found',
+                  summary: 'Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)!'
+                }
+              }).then(function (check) {
+                resolve({body: check.title});
+              }).catch(function (err) {
+                resolve({statusCode: 500, body: { error: err, reason: 'Error during GitHub Check creation.' }});
+              });
+            }
           });
         });
+      } else {
+        return resolve({statusCode: 500, body: { error: err, reason: 'Generic error in checker promise chain.' }});
       }
-    }).catch(function (err) {
-      return resolve({statusCode: 500, body: { error: err, reason: 'Generic error in checker promise chain.' }});
     });
   });
 }

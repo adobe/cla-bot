@@ -14,7 +14,7 @@ function main (params) {
       cert: config.githubKey
     });
     app.asInstallation(installation_id).then(function (github) {
-      return github.checks.create({
+      var options = {
         owner: params.org,
         repo: params.repo,
         name: 'Adobe CLA Signed?',
@@ -27,7 +27,9 @@ function main (params) {
           title: params.title,
           summary: params.summary
         }
-      });
+      };
+      if (params.details_url) options.details_url = params.details_url;
+      return github.checks.create(options);
     }).then(function (check) {
       resolve({title: params.title});
     }).catch(function (err) {
