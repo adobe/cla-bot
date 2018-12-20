@@ -1,5 +1,7 @@
 {
-	"refreshToken":"",
-	"clientID":"",
-	"clientSecret":""
+	"signRefreshToken":"",
+	"signClientID":"",
+	"signClientSecret":"",
+	"githubKey":"",
+	"githubAppId":""
 }
