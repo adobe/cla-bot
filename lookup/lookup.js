@@ -8,7 +8,7 @@ function main(params) {
 
   return new Promise(function (resolve, reject) {
 
-    if (params.agreements && params.agreements.length > 0) {
+    if (params.agreements && params.agreements.constructor === Array) {
       agreements = params.agreements;
     } else if (params.agreements) {
       agreements.push(params.agreements);
