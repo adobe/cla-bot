@@ -23,6 +23,7 @@ This repo contains three actions, which are functions that run on a serverless
     [Checks API](https://developer.github.com/v3/checks/runs) to set checkmarks
     on pull requests. It is invoekd by other actions to communicate pass/fail to
     pull request authors.
+- `./lookup` contains an action that accepts agreement_id(s) as `agreements` parameter, interacts with Adobe Sign formData APIs, it parses the formData of all the agreements to lookup the github usernames and returns a consolidated list of github usernames.
 
 ## Requirements
 

@@ -1,0 +1,19 @@
+{
+  "name": "lookup",
+  "version": "1.0.0",
+  "description": "cla-bot checker for adobe ",
+  "main": "./lookup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node lookup.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.corp.adobe.com:OpenSourceAdvisoryBoard/cla-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.88.0"
+  }
+}
