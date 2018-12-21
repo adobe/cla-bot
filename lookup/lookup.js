@@ -63,7 +63,8 @@ function lookup(args, callback) {
 
   async.each(agreements, function (agreement, callback) {
     lookupSingleAgreement(args, agreement, function (username) {
-      usernames.push(username);
+      if(usernames.indexOf(username)===-1)
+      {usernames.push(username);}
       callback();
     });
   }, function (err) {
