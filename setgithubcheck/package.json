@@ -1,11 +1,11 @@
 {
-  "name": "checker",
+  "name": "setgithubcheck",
   "version": "1.0.0",
   "description": "cla-bot checker for adobe ",
-  "main": "./checker.js",
+  "main": "./setgithubcheck.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node checker.js"
+    "start": "node setgithubcheck.js"
   },
   "repository": {
     "type": "git",
@@ -14,7 +14,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "github-app": "^4.0.1",
-    "request": "^2.88.0"
+    "github-app": "^4.0.1"
   }
 }
