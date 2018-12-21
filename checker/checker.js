@@ -12,14 +12,17 @@ gets fired from github pr creation webhook.
 
 */
 
-function main (params) {
+function main(params) {
   return new Promise((resolve, reject) => {
     // TODO: we also get 'run checks' payloads from github. should we trigger on
     // pull request events or on check events? check events may be better as
     // users can also 'rerequest' checks be rerun. however, check payloads may
     // be insufficient (see github app payloads under github app -> advanced for
     // details on this)
-    if (!params.pull_request) return resolve({ statusCode: 400, body: 'Not a pull request, ignoring' });
+    if (!params.pull_request) return resolve({
+      statusCode: 400,
+      body: 'Not a pull request, ignoring'
+    });
 
     var ow = openwhisk();
     // TODO: currently this runs on pull request closed and reopened.
@@ -37,7 +40,10 @@ function main (params) {
     });
     app.asInstallation(installation_id).then(function (gh) {
       github = gh;
-      return github.orgs.checkMembership({org: org, username: user});
+      return github.orgs.checkMembership({
+        org: 'adobe',
+        username: user
+      });
     }).then(function (is_member) {
       // if status is 204, user is a member.
       // if status is 404, user is not a member.
@@ -61,9 +67,17 @@ function main (params) {
         }).then(function (check) {
           // The parameter in this function is defined by the setgithubcheck
           // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
-          resolve({body: check.title});
+          resolve({
+            body: check.title
+          });
         }).catch(function (err) {
-          resolve({statusCode: 500, body: { error: err, reason: 'Error during GitHub Check creation.' }});
+          resolve({
+            statusCode: 500,
+            body: {
+              error: err,
+              reason: 'Error during GitHub Check creation.'
+            }
+          });
         });
       }
     }).catch(function (err) {
@@ -85,30 +99,130 @@ function main (params) {
         };
 
         request(options, function (error, response, body) {
-          if (error) return resolve({statusCode: 500, body: { error: error, reason: 'Error retrieving Adobe Sign refresh token.' }});
+          if (error) return resolve({
+            statusCode: 500,
+            body: {
+              error: error,
+              reason: 'Error retrieving Adobe Sign refresh token.'
+            }
+          });
           var access_token = JSON.parse(body).access_token;
-          console.log(access_token);
           var options = {
             method: 'GET',
             url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements',
-            qs: { query: user },
+            qs: {
+              query: user
+            },
             headers: {
               'cache-control': 'no-cache',
               'Access-Token': access_token
             },
             json: true
           };
-
           request(options, function (error, response, body) {
-            if (error) return resolve({statusCode: 500, body: { error: error, reason: 'Error retrieving Adobe Sign agreements.' }});
+            if (error) return resolve({
+              statusCode: 500,
+              body: {
+                error: error,
+                reason: 'Error retrieving Adobe Sign agreements.'
+              }
+            });
+
             if (body.userAgreementList && body.userAgreementList.length) {
               // We have a few agreements to search through.
-              var agreements = body.userAgreementList.filter(function (agreement) { return agreement.status === 'SIGNED'; });
+              var agreements = body.userAgreementList.filter(function (agreement) {
+                return (agreement.status === 'SIGNED' && (agreement.name === "Adobe Contributor License Agreement" || agreement.name === "Adobe CLA"));
+              }).map(function (agreement) {
+                return agreement.agreementId;
+              });
+              ow.actions.invoke({
+                name: 'cla-lookup',
+                blocking: true,
+                result: true,
+                params: {
+                  agreements: agreements,
+                  username: user
+                }
+              }).then(function (res) {
+                var usernames = res.body.usernames;
+                if (usernames.includes(user)) {
+                  ow.actions.invoke({
+                    name: 'cla-setgithubcheck',
+                    blocking: true,
+                    result: true,
+                    params: {
+                      installation_id: installation_id,
+                      org: org,
+                      repo: repo,
+                      sha: commit_sha,
+                      status: 'completed',
+                      start_time: start_time,
+                      conclusion: 'success',
+                      title: 'CLA Signed',
+                      summary: 'A Signed CLA has been found for the github user ' + user
+                    }
+                  }).then(function (check) {
+                    // The parameter in this function is defined by the setgithubcheck
+                    // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
+                    resolve({
+                      body: check.title
+                    });
+                  }).catch(function (err) {
+                    resolve({
+                      statusCode: 500,
+                      body: {
+                        error: err,
+                        reason: 'Error during GitHub Check creation.'
+                      }
+                    });
+                  });
+
+                } else {
+                  ow.actions.invoke({
+                    name: 'cla-setgithubcheck',
+                    blocking: true,
+                    result: true,
+                    params: {
+                      installation_id: installation_id,
+                      org: org,
+                      repo: repo,
+                      sha: commit_sha,
+                      status: 'completed',
+                      start_time: start_time,
+                      conclusion: 'action_required',
+                      details_url: 'http://opensource.adobe.com/cla.html',
+                      title: '✗ No Signed Agreements Found',
+                      summary: 'Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)!'
+                    }
+                  }).then(function (check) {
+                    resolve({
+                      body: check.title
+                    });
+                  }).catch(function (err) {
+                    resolve({
+                      statusCode: 500,
+                      body: {
+                        error: err,
+                        reason: 'Error during GitHub Check creation.'
+                      }
+                    });
+                  });
+
+                }
+              }).catch(function (err) {
+                resolve({
+                  statusCode: 500,
+                  body: {
+                    error: err,
+                    reason: 'Error during lookup action.'
+                  }
+                });
+              });
               // TODO: iterate through the agreements, retrieve formdata for
               // each agreement, which is a csv (maybe we could pipe request
               // into a csv parser that can handle streams?), parse the csv,
               // extract data we need.
-              resolve({ body: agreements }); // protip: you can see this output from the github app's advanced tab when you dive into the 'deliveries'
+              // protip: you can see this output from the github app's advanced tab when you dive into the 'deliveries'
             } else {
               // No agreements found, set the GitHub Check to fail
               ow.actions.invoke({
@@ -128,15 +242,29 @@ function main (params) {
                   summary: 'Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)!'
                 }
               }).then(function (check) {
-                resolve({body: check.title});
+                resolve({
+                  body: check.title
+                });
               }).catch(function (err) {
-                resolve({statusCode: 500, body: { error: err, reason: 'Error during GitHub Check creation.' }});
+                resolve({
+                  statusCode: 500,
+                  body: {
+                    error: err,
+                    reason: 'Error during GitHub Check creation.'
+                  }
+                });
               });
             }
           });
         });
       } else {
-        return resolve({statusCode: 500, body: { error: err, reason: 'Generic error in checker promise chain.' }});
+        return resolve({
+          statusCode: 500,
+          body: {
+            error: err,
+            reason: 'Generic error in checker promise chain.'
+          }
+        });
       }
     });
   });
