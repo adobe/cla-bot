@@ -16,7 +16,7 @@ This repo contains three actions, which are functions that run on a serverless
     the pull request has signed the CLA or if the user is an Adobe employee (by
     checking github.com/adobe organization membership).
 - `./confirmer` contains an action that runs when an agreement on Adobe Sign is
-    signed. This action will pull the github username of the signeefrom the
+    signed. This action will pull the github username of the signee from the
     agreement and comment on any open PRs from that user on one of our supported
     github orgs.
 - `./setgithubcheck` contains an action that interacts with the GitHub REST API's
