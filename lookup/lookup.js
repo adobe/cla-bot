@@ -8,11 +8,14 @@ function main(params) {
 
   return new Promise(function (resolve, reject) {
 
-    if (params.agreements && params.agreements.length <= 0) {
-      agreements.push(params.agreements);
-
-    } else {
+    if (params.agreements && params.agreements.length > 0) {
       agreements = params.agreements;
+    } else if (params.agreements) {
+      agreements.push(params.agreements);
+    } else {
+      reject({
+        body: "param 'agreements' not found in request"
+      });
     }
 
     var options = {
