@@ -56,7 +56,7 @@ function main (params) {
             start_time: start_time,
             conclusion: 'success',
             title: '✓ Adobe Employee',
-            summary: 'Pull request issued by an Adobe Employee, carry on.'
+            summary: 'Pull request issued by an Adobe Employee (based on membership in github.com/adobe), carry on.'
           }
         }).then(function (check) {
           // The parameter in this function is defined by the setgithubcheck
