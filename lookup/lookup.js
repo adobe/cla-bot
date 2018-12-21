@@ -1,13 +1,12 @@
 var request = require("request");
 var config = require("./config.json");
-var async = require('async');
-
+var async = require("async");
 
 function main(params) {
   var agreements = [];
 
   return new Promise(function (resolve, reject) {
-
+    //Expects an array of agreement_ids for cla-bot/checker and a single agreement_id for cla-bot/confirmer
     if (params.agreements && params.agreements.constructor === Array) {
       agreements = params.agreements;
     } else if (params.agreements) {
@@ -18,6 +17,7 @@ function main(params) {
       });
     }
 
+    //Get an access_token from a refresh_token for Adobe Sign APIs
     var options = {
       method: 'POST',
       url: 'https://api.na2.echosign.com/oauth/refresh',
@@ -49,22 +49,20 @@ function main(params) {
           }
         });
       });
-
-
     });
   });
 }
 
 function lookup(args, callback) {
-
-
   var agreements = args.agreements;
   var usernames = [];
 
+  //Lookup github usernames for each agreement in the list and return the consolidated response
   async.each(agreements, function (agreement, callback) {
     lookupSingleAgreement(args, agreement, function (username) {
-      if(usernames.indexOf(username)===-1)
-      {usernames.push(username);}
+      if (usernames.indexOf(username) === -1) {
+        usernames.push(username);
+      }
       callback();
     });
   }, function (err) {
@@ -76,8 +74,6 @@ function lookup(args, callback) {
     }
 
   });
-
-
 }
 
 function lookupSingleAgreement(args, agreement, callback) {
@@ -94,17 +90,13 @@ function lookupSingleAgreement(args, agreement, callback) {
 
   request(options, function (error, response, body) {
     if (error) throw new Error(error);
+    //Logic to parse CSV and get the value for Custom Field 1
     var csv = body.replace(/"/g, '').split('\n');
-
     var username = csv[1].split(',')[csv[0].split(',').indexOf("Custom Field 1")];
-
     if (username !== undefined && username !== "") {
       callback(username);
     }
-
   });
-
-
 }
 
 
