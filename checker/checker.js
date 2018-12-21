@@ -85,7 +85,7 @@ function main (params) {
         };
 
         request(options, function (error, response, body) {
-          if (error) return resolve({statusCode: 500, body: { error: error, reason: 'Error retrieving Adobe Sign refresh token.' }});
+          if (error) return resolve({statusCode: 500, body: { error: error, reason: 'Error retrieving Adobe Sign access token.' }});
           var access_token = JSON.parse(body).access_token;
           console.log(access_token);
           var options = {
