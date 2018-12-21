@@ -26,10 +26,10 @@ function main(params) {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       form: {
-        client_id: config.clientID,
-        client_secret: config.clientSecret,
+        client_id: config.signClientID,
+        client_secret: config.signClientSecret,
         grant_type: 'refresh_token',
-        refresh_token: config.refreshToken
+        refresh_token: config.signRefreshToken
       }
     };
 
