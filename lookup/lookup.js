@@ -7,6 +7,7 @@ function main(params) {
 
   return new Promise(function (resolve, reject) {
     //Expects an array of agreement_ids for cla-bot/checker and a single agreement_id for cla-bot/confirmer
+
     if (params.agreements && params.agreements.constructor === Array) {
       agreements = params.agreements;
     } else if (params.agreements) {
@@ -36,7 +37,6 @@ function main(params) {
     request(options, function (error, response, body) {
       if (error) throw new Error(error);
       var access_token = JSON.parse(body).access_token;
-
       var args = {
         agreements: agreements,
         access_token: access_token
@@ -91,8 +91,14 @@ function lookupSingleAgreement(args, agreement, callback) {
   request(options, function (error, response, body) {
     if (error) throw new Error(error);
     //Logic to parse CSV and get the value for Custom Field 1
+
     var csv = body.replace(/"/g, '').split('\n');
-    var username = csv[1].split(',')[csv[0].split(',').indexOf("Custom Field 1")];
+
+    var index = csv[0].split(',').indexOf("githubUsername");
+    if (index < 0) {
+      index = csv[0].split(',').indexOf("Custom Field 1");
+    }
+    var username = csv[1].split(',')[index];
     if (username !== undefined && username !== "") {
       callback(username);
     }
