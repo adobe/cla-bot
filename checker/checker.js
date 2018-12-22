@@ -62,7 +62,7 @@ function main(params) {
             start_time: start_time,
             conclusion: 'success',
             title: '✓ Adobe Employee',
-            summary: 'Pull request issued by an Adobe Employee, carry on.'
+            summary: 'Pull request issued by an Adobe Employee (based on membership in github.com/adobe), carry on.'
           }
         }).then(function (check) {
           // The parameter in this function is defined by the setgithubcheck
@@ -99,13 +99,7 @@ function main(params) {
         };
 
         request(options, function (error, response, body) {
-          if (error) return resolve({
-            statusCode: 500,
-            body: {
-              error: error,
-              reason: 'Error retrieving Adobe Sign refresh token.'
-            }
-          });
+          if (error) return resolve({statusCode: 500, body: { error: error, reason: 'Error retrieving Adobe Sign access token.' }});
           var access_token = JSON.parse(body).access_token;
           var options = {
             method: 'GET',

@@ -1,11 +1,11 @@
 {
   "name": "confirmer",
   "version": "1.0.0",
-  "description": "cla-bot checker for adobe ",
-  "main": "./checker.js",
+  "description": "cla-bot confirmer for adobe",
+  "main": "./confirmer.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node checker.js"
+    "start": "node confirmer.js"
   },
   "repository": {
     "type": "git",
@@ -14,6 +14,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "request": "^2.88.0"
+    "github-app": "^4.0.1"
   }
 }
