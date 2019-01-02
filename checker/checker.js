@@ -4,12 +4,10 @@ var github_app = require('github-app');
 var openwhisk = require('openwhisk');
 /*
 gets fired from github pr creation webhook.
-
 * Check if they are adobe employee, if yes, give checkmark
 * If not an employee, report back if the CLA is already signed
 * if signed, give checkmark
 * if not signed, give an 'x' and tell them to go sign at http://opensource.adobe.com/cla
-
 */
 
 function main(params) {
@@ -27,13 +25,22 @@ function main(params) {
     var ow = openwhisk();
     // TODO: currently this runs on pull request closed and reopened.
     // TODO: what if the repo is private?
-    var start_time = (new Date()).toISOString();
+    var github;
     var user = params.pull_request.user.login;
+    var start_time = (new Date()).toISOString();
     var org = params.pull_request.base.repo.owner.login;
     var repo = params.pull_request.base.repo.name;
     var commit_sha = params.pull_request.head.sha;
-    var github;
     var installation_id = params.installation.id;
+
+    var args = {
+      start_time: start_time,
+      org: org,
+      repo: repo,
+      commit_sha: commit_sha,
+      installation_id: installation_id
+    };
+
     var app = github_app({
       id: config.githubAppId,
       cert: config.githubKey
@@ -99,7 +106,13 @@ function main(params) {
         };
 
         request(options, function (error, response, body) {
-          if (error) return resolve({statusCode: 500, body: { error: error, reason: 'Error retrieving Adobe Sign access token.' }});
+          if (error) return resolve({
+            statusCode: 500,
+            body: {
+              error: error,
+              reason: 'Error retrieving Adobe Sign access token.'
+            }
+          });
           var access_token = JSON.parse(body).access_token;
           var options = {
             method: 'GET',
@@ -172,35 +185,7 @@ function main(params) {
                   });
 
                 } else {
-                  ow.actions.invoke({
-                    name: 'cla-setgithubcheck',
-                    blocking: true,
-                    result: true,
-                    params: {
-                      installation_id: installation_id,
-                      org: org,
-                      repo: repo,
-                      sha: commit_sha,
-                      status: 'completed',
-                      start_time: start_time,
-                      conclusion: 'action_required',
-                      details_url: 'http://opensource.adobe.com/cla.html',
-                      title: '✗ No Signed Agreements Found',
-                      summary: 'Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)!'
-                    }
-                  }).then(function (check) {
-                    resolve({
-                      body: check.title
-                    });
-                  }).catch(function (err) {
-                    resolve({
-                      statusCode: 500,
-                      body: {
-                        error: err,
-                        reason: 'Error during GitHub Check creation.'
-                      }
-                    });
-                  });
+                  resolve(action_required(ow, args));
 
                 }
               }).catch(function (err) {
@@ -219,35 +204,8 @@ function main(params) {
               // protip: you can see this output from the github app's advanced tab when you dive into the 'deliveries'
             } else {
               // No agreements found, set the GitHub Check to fail
-              ow.actions.invoke({
-                name: 'cla-setgithubcheck',
-                blocking: true,
-                result: true,
-                params: {
-                  installation_id: installation_id,
-                  org: org,
-                  repo: repo,
-                  sha: commit_sha,
-                  status: 'completed',
-                  start_time: start_time,
-                  conclusion: 'action_required',
-                  details_url: 'http://opensource.adobe.com/cla.html',
-                  title: '✗ No Signed Agreements Found',
-                  summary: 'Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)!'
-                }
-              }).then(function (check) {
-                resolve({
-                  body: check.title
-                });
-              }).catch(function (err) {
-                resolve({
-                  statusCode: 500,
-                  body: {
-                    error: err,
-                    reason: 'Error during GitHub Check creation.'
-                  }
-                });
-              });
+              resolve(action_required(ow, args));
+
             }
           });
         });
@@ -261,6 +219,38 @@ function main(params) {
         });
       }
     });
+  });
+}
+
+function action_required(ow, args) {
+  ow.actions.invoke({
+    name: 'cla-setgithubcheck',
+    blocking: true,
+    result: true,
+    params: {
+      installation_id: args.installation_id,
+      org: args.org,
+      repo: args.repo,
+      sha: args.commit_sha,
+      status: 'completed',
+      start_time: args.start_time,
+      conclusion: 'action_required',
+      details_url: 'http://opensource.adobe.com/cla.html',
+      title: '✗ No Signed Agreements Found',
+      summary: 'Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)!'
+    }
+  }).then(function (check) {
+    return {
+      body: check.title
+    };
+  }).catch(function (err) {
+    return {
+      statusCode: 500,
+      body: {
+        error: err,
+        reason: 'Error during GitHub Check creation.'
+      }
+    };
   });
 }
 
