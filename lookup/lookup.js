@@ -1,6 +1,7 @@
 var request = require("request");
 var config = require("./config.json");
 var async = require("async");
+var parse = require("csv-parse");
 
 function main(params) {
   var agreements = [];
@@ -59,10 +60,8 @@ function lookup(args, callback) {
 
   //Lookup github usernames for each agreement in the list and return the consolidated response
   async.each(agreements, function (agreement, callback) {
-    lookupSingleAgreement(args, agreement, function (username) {
-      if (usernames.indexOf(username) === -1) {
-        usernames.push(username);
-      }
+    lookupSingleAgreement(args, agreement, function (users) {
+      usernames = Array.from(new Set(usernames.concat(users)));
       callback();
     });
   }, function (err) {
@@ -90,18 +89,26 @@ function lookupSingleAgreement(args, agreement, callback) {
 
   request(options, function (error, response, body) {
     if (error) throw new Error(error);
-    //Logic to parse CSV and get the value for Custom Field 1
+    //Logic to parse CSV and get the value for Custom Field 8 or Custom Field 1 or githubUsername
 
-    var csv = body.replace(/"/g, '').split('\n');
 
-    var index = csv[0].split(',').indexOf("githubUsername");
-    if (index < 0) {
-      index = csv[0].split(',').indexOf("Custom Field 1");
-    }
-    var username = csv[1].split(',')[index];
-    if (username !== undefined && username !== "") {
-      callback(username);
-    }
+
+    parse(body.trim(), {
+      columns: true
+    }, function (err, records) {
+      var usernames = [];
+      var data = records[0];
+      if (data["Custom Field 8"] !== undefined) {
+        usernames = data["Custom Field 8"].split(/[\s,\n]+/);
+      } else if (data["Custom Field 1"] !== undefined) {
+        usernames.push(data["Custom Field 1"]);
+      } else if (data.githubUsername !== undefined) {
+        usernames.push(data.githubUsername);
+      }
+      callback(usernames);
+    });
+
+
   });
 }
 
