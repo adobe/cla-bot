@@ -69,6 +69,14 @@ wsk action get cla-checker --url
 
 ### Debug
 
+#### Check GitHub App Deliveries
+
+You can go check GitHub webhook delivery payloads and responses on the [CLA Bot's
+App Advanced
+Settings](https://github.com/organizations/adobe/settings/apps/adobe-cla-bot/advanced).
+
+#### Check logs on Adobe Runtime
+
 Get list of actions running on our namespace:
 
 ```
@@ -80,10 +88,4 @@ retrieve its logs:
 
 ```
 wsk activation get ACTIVATION-LIST-NUMBER
-```
-
-... convenience script to retrieve response body:
-
-```
-./debug ACTIVATION-LIST-NUMBER
 ```

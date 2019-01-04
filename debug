@@ -1,2 +1,0 @@
-#!/bin/sh
-wsk activation get $1 | tail -n +2 | xargs -0 node -e "console.log(JSON.stringify(JSON.parse(JSON.parse(process.argv[1]).response.result.body), null, 2))"
