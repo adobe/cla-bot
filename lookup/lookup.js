@@ -11,7 +11,24 @@ governing permissions and limitations under the License.
 */
 
 var request = require('request');
-var config = require('./config.json');
+var fs = require('fs');
+var config_path = './config.json';
+var config;
+if (fs.existsSync(config_path)) {
+  config = require('./config.json');
+} else if (process.env.SIGN_REFRESH_TOKEN && process.env.SIGN_CLIENT_ID && process.env.SIGN_CLIENT_SECRET && process.env.GITHUB_KEY && process.env.GITHUB_APP_ID) {
+  config = {
+    signRefreshToken: process.env.SIGN_REFRESH_TOKEN,
+    signClientID: process.env.SIGN_CLIENT_ID,
+    signClientSecret: process.env.SIGN_CLIENT_SECRET,
+    githubKey: process.env.GITHUB_KEY,
+    githubAppId: process.env.GITHUB_APP_ID
+  };
+} else if (process.env.TRAVIS_PULL_REQUEST && process.env.TRAVIS_PULL_REQUEST.length) {
+  config = {};
+} else {
+  throw new Error('no config file nor environment variables exist for populating configuration');
+}
 var async = require('async');
 var parse = require('csv-parse');
 
@@ -26,9 +43,7 @@ function main (params) {
     } else if (params.agreements) {
       agreements.push(params.agreements);
     } else {
-      reject({
-        body: "param 'agreements' not found in request"
-      });
+      return reject(new Error("param 'agreements' not found in request"));
     }
 
     // Get an access_token from a refresh_token for Adobe Sign APIs
@@ -104,7 +119,7 @@ function lookupSingleAgreement (args, agreement, callback) {
 
     parse(body.trim(), {
       columns: true
-    }, function (err, records) {
+    }, function (_, records) {
       var usernames = [];
       var data = records[0];
       if (data['Custom Field 8'] !== undefined) {

@@ -11,7 +11,24 @@ governing permissions and limitations under the License.
 */
 
 var request = require('request');
-var config = require('./config.json');
+var fs = require('fs');
+var config_path = './config.json';
+var config;
+if (fs.existsSync(config_path)) {
+  config = require('./config.json');
+} else if (process.env.SIGN_REFRESH_TOKEN && process.env.SIGN_CLIENT_ID && process.env.SIGN_CLIENT_SECRET && process.env.GITHUB_KEY && process.env.GITHUB_APP_ID) {
+  config = {
+    signRefreshToken: process.env.SIGN_REFRESH_TOKEN,
+    signClientID: process.env.SIGN_CLIENT_ID,
+    signClientSecret: process.env.SIGN_CLIENT_SECRET,
+    githubKey: process.env.GITHUB_KEY,
+    githubAppId: process.env.GITHUB_APP_ID
+  };
+} else if (process.env.TRAVIS_PULL_REQUEST && process.env.TRAVIS_PULL_REQUEST.length) {
+  config = {};
+} else {
+  throw new Error('no config file nor environment variables exist for populating configuration');
+}
 var github_app = require('github-app');
 var openwhisk = require('openwhisk');
 /*
@@ -22,17 +39,19 @@ gets fired from github pr creation webhook.
 * if not signed, give an 'x' and tell them to go sign at http://opensource.adobe.com/cla
 */
 
-function main(params) {
+function main (params) {
   return new Promise((resolve, reject) => {
     // TODO: we also get 'run checks' payloads from github. should we trigger on
     // pull request events or on check events? check events may be better as
     // users can also 'rerequest' checks be rerun. however, check payloads may
     // be insufficient (see github app payloads under github app -> advanced for
     // details on this)
-    if (!params.pull_request) return resolve({
-      statusCode: 400,
-      body: 'Not a pull request, ignoring'
-    });
+    if (!params.pull_request) {
+      return resolve({
+        statusCode: 400,
+        body: 'Not a pull request, ignoring'
+      });
+    }
 
     var ow = openwhisk();
     // TODO: currently this runs on pull request closed and reopened.
@@ -118,13 +137,15 @@ function main(params) {
         };
 
         request(options, function (error, response, body) {
-          if (error) return resolve({
-            statusCode: 500,
-            body: {
-              error: error,
-              reason: 'Error retrieving Adobe Sign access token.'
-            }
-          });
+          if (error) {
+            return resolve({
+              statusCode: 500,
+              body: {
+                error: error,
+                reason: 'Error retrieving Adobe Sign access token.'
+              }
+            });
+          }
           var access_token = JSON.parse(body).access_token;
           var options = {
             method: 'GET',
@@ -139,18 +160,20 @@ function main(params) {
             json: true
           };
           request(options, function (error, response, body) {
-            if (error) return resolve({
-              statusCode: 500,
-              body: {
-                error: error,
-                reason: 'Error retrieving Adobe Sign agreements.'
-              }
-            });
+            if (error) {
+              return resolve({
+                statusCode: 500,
+                body: {
+                  error: error,
+                  reason: 'Error retrieving Adobe Sign agreements.'
+                }
+              });
+            }
 
             if (body.userAgreementList && body.userAgreementList.length) {
               // We have a few agreements to search through.
               var agreements = body.userAgreementList.filter(function (agreement) {
-                return (agreement.status === 'SIGNED' && (agreement.name === "Adobe Contributor License Agreement" || agreement.name === "Adobe CLA"));
+                return (agreement.status === 'SIGNED' && (agreement.name === 'Adobe Contributor License Agreement' || agreement.name === 'Adobe CLA'));
               }).map(function (agreement) {
                 return agreement.agreementId;
               });
@@ -195,10 +218,8 @@ function main(params) {
                       }
                     });
                   });
-
                 } else {
                   resolve(action_required(ow, args));
-
                 }
               }).catch(function (err) {
                 resolve({
@@ -217,7 +238,6 @@ function main(params) {
             } else {
               // No agreements found, set the GitHub Check to fail
               resolve(action_required(ow, args));
-
             }
           });
         });
@@ -234,7 +254,7 @@ function main(params) {
   });
 }
 
-function action_required(ow, args) {
+function action_required (ow, args) {
   ow.actions.invoke({
     name: 'cla-setgithubcheck',
     blocking: true,
