@@ -249,7 +249,7 @@ function action_required(ow, args) {
       conclusion: 'action_required',
       details_url: 'http://opensource.adobe.com/cla.html',
       title: '✗ No Signed Agreements Found',
-      summary: 'Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)!'
+      summary: 'Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)! Once signed, close and re-open your pull request to run the check again.'
     }
   }).then(function (check) {
     return {
