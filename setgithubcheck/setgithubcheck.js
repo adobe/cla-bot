@@ -23,6 +23,8 @@ if (fs.existsSync(config_path)) {
     githubKey: process.env.GITHUB_KEY,
     githubAppId: process.env.GITHUB_APP_ID
   };
+} else if (process.env.TRAVIS_PULL_REQUEST && process.env.TRAVIS_PULL_REQUEST.length) {
+  config = {};
 } else {
   throw new Error('no config file nor environment variables exist for populating configuration');
 }
