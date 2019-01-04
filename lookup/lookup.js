@@ -11,7 +11,22 @@ governing permissions and limitations under the License.
 */
 
 var request = require('request');
-var config = require('./config.json');
+var fs = require('fs');
+var config_path = './config.json';
+var config;
+if (fs.existsSync(config_path)) {
+  config = require('./config.json');
+} else if (process.env.SIGN_REFRESH_TOKEN && process.env.SIGN_CLIENT_ID && process.env.SIGN_CLIENT_SECRET && process.env.GITHUB_KEY && process.env.GITHUB_APP_ID) {
+  config = {
+    signRefreshToken: process.env.SIGN_REFRESH_TOKEN,
+    signClientID: process.env.SIGN_CLIENT_ID,
+    signClientSecret: process.env.SIGN_CLIENT_SECRET,
+    githubKey: process.env.GITHUB_KEY,
+    githubAppId: process.env.GITHUB_APP_ID
+  };
+} else {
+  throw new Error('no config file nor environment variables exist for populating configuration');
+}
 var async = require('async');
 var parse = require('csv-parse');
 
