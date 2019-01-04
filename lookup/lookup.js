@@ -26,9 +26,7 @@ function main (params) {
     } else if (params.agreements) {
       agreements.push(params.agreements);
     } else {
-      reject({
-        body: "param 'agreements' not found in request"
-      });
+      return reject(new Error("param 'agreements' not found in request"));
     }
 
     // Get an access_token from a refresh_token for Adobe Sign APIs
@@ -104,7 +102,7 @@ function lookupSingleAgreement (args, agreement, callback) {
 
     parse(body.trim(), {
       columns: true
-    }, function (err, records) {
+    }, function (_, records) {
       var usernames = [];
       var data = records[0];
       if (data['Custom Field 8'] !== undefined) {

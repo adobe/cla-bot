@@ -1,0 +1,38 @@
+{
+  "name": "@adobe/cla-bot",
+  "version": "1.0.0",
+  "description": "A GitHub App that checks if contributors have signed a CLA, or are an Adobe employee.",
+  "main": "checker/checker.js",
+  "scripts": {
+    "test": "mocha checker/test.js && eslint checker lookup setgithubcheck"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adobe/cla-bot.git"
+  },
+  "keywords": [
+    "cla",
+    "github-app"
+  ],
+  "author": "Adobe",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/adobe/cla-bot/issues"
+  },
+  "homepage": "https://github.com/adobe/cla-bot#readme",
+  "dependencies": {
+    "csv-parse": "^4.3.0",
+    "github-app": "^4.0.1",
+    "openwhisk": "^3.18.0",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.11.1",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.1",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "mocha": "^5.2.0"
+  }
+}

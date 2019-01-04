@@ -43,7 +43,7 @@ function main (params) {
       if (params.details_url) options.details_url = params.details_url;
       return github.checks.create(options);
     }).then(function (check) {
-      resolve({title: params.title});
+      resolve({ title: params.title });
     }).catch(function (err) {
       reject(new Error(err));
     });

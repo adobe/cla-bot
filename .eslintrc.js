@@ -1,4 +1,7 @@
 module.exports = {
+  'env': {
+    'node': true
+  },
   'extends': 'standard',
   'rules': {
     'indent': ['error', 2],
