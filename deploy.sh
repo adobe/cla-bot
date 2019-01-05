@@ -1,4 +1,5 @@
 #!/bin/sh
+echo "deploy.sh pwd: $(pwd)"
 rm -rf dist
 mkdir dist
 ACTION="$1"
