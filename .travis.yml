@@ -6,9 +6,9 @@ branches:
     - master
     - /^greenkeeper/.*$/
 before_deploy:
-  - echo "lc before_deploy pwd $(pwd)"
-  - wget https://github.com/apache/incubator-openwhisk-cli/releases/download/latest/OpenWhisk_CLI-latest-linux-amd64.tgz
-  - tar xvf OpenWhisk_CLI-latest-linux-amd64.tgz
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://github.com/apache/incubator-openwhisk-cli/releases/download/latest/OpenWhisk_CLI-latest-linux-amd64.tgz | tar xz -C ~/.local/bin
 deploy:
   provider: script
   script: echo "lc deploy pwd $(pwd)" && bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker
