@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@git.corp.adobe.com:OpenSourceAdvisoryBoard/cla-bot.git"
+    "url": "git@github.com:adobe/cla-bot.git"
   },
   "author": "",
   "license": "ISC",
