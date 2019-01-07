@@ -39,12 +39,13 @@ fi
 cp utils.js dist/.
 sed -i.bak 's/\.\.\/utils\.js/\.\/utils\.js/' "dist/${ACTION}.js"
 pushd dist
-zip -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
+zip -q -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
 popd
 if [ -e ~/.wskprops ]
 then
     $WSK action update "cla-${ACTION}" --kind nodejs:6 "dist/${ACTION}.zip" --web true
 else
-    $WSK property set --namespace io-solutions
+    echo "Setting runtime namespace to io-solutions..."
+    $WSK property set --namespace io-solutions --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
     $WSK action update cla-lookup --kind nodejs:6 dist/lookup.zip --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi
