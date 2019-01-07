@@ -40,13 +40,20 @@ Each action's name when deployed on Adobe Runtime is `cla-` + the action name
 
 #### Creating New Actions
 
-1. Zip up the action
+1. Install any dependencies of the action:
 
 ```
-cd checker && zip -r checker.zip .
+cd checker
+npm install
 ```
 
-2. To create the action, run the following command:
+2. Zip up the action:
+
+```
+zip -r checker.zip .
+```
+
+3. Upload the action to Runtime via the following command:
 
 ```
 wsk action create cla-checker --kind nodejs:6 checker.zip --web true
@@ -72,7 +79,7 @@ Settings](https://github.com/organizations/adobe/settings/apps/adobe-cla-bot/adv
 
 #### Check Logs on Adobe Runtime
 
-Get list of actions running on our namespace:
+Get list of action invocations, or _activations_, that executed in our namespace:
 
 ```
 wsk activation list
