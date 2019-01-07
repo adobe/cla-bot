@@ -69,6 +69,35 @@ If you need to update a runtime action, use our handy deploy script:
 ./deploy.sh checker
 ```
 
+#### Creating a GitHub App
+
+This bot is implemented as a [GitHub
+App](https://developer.github.com/apps/building-github-apps/). It can be
+installed on individual repositories or organizations, and sends GitHub webhook
+events from repos/orgs it is installed on to the [`./checker`](./checker)
+action. To set the GitHub App up:
+
+1. In your Organization Settings, under Developer Settings, click on GitHub
+   Apps.
+2. Click New GitHub App.
+3. Fill out a name and description for your App.
+4. Fill out the Webhook URL to match the URL of your `checker` action. If you
+   have not deployed the `checker` action yet, follow the above instructions on
+   [Creating New Actions](#creating-new-actions). If you have already deployed
+   this action, see below for information on [how to retrieve the URL of the
+   action](#getting-urls-of-actions).
+5. Under the Permissions section, give the App Read and Write access to Checks,
+   Read-only access to Repository Metadata, Read-only access to Pull Requests
+   and Read and Write access to Commit Statuses.
+6. Leave the User Permissions as-is.
+7. Under Subscribe to Events, check Pull Requests.
+
+Once created, you will have the chance to generate and store a Private Key. Keep
+this and add it to your `config.json` file! You will also want to make note of
+the GitHub App ID - again, this goes into your `config.json`. Finally, you will
+want to Install the app in to your organizations or repositories of choice. You
+can do so from the same Settings page of the App.
+
 ### Debug
 
 #### Check GitHub App Deliveries
