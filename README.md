@@ -15,10 +15,6 @@ This repo contains three actions, which are functions that run on a serverless
     pull request open and close. Checker's job is to check if the user submitting
     the pull request has signed the CLA or if the user is an Adobe employee (by
     checking github.com/adobe organization membership).
-- `./confirmer` contains an action that runs when an agreement on Adobe Sign is
-    signed. This action will pull the github username of the signee from the
-    agreement and comment on any open PRs from that user on one of our supported
-    github orgs.
 - `./setgithubcheck` contains an action that interacts with the GitHub REST API's
     [Checks API](https://developer.github.com/v3/checks/runs) to set checkmarks
     on pull requests. It is invoekd by other actions to communicate pass/fail to
@@ -42,29 +38,35 @@ you haven't.
 Each action's name when deployed on Adobe Runtime is `cla-` + the action name
 (subdirectory).
 
-Zip up the action
+#### Creating New Actions
+
+1. Install any dependencies of the action:
 
 ```
-cd checker && zip -r checker.zip .
+cd checker
+npm install
 ```
 
-If you haven't created a runtime action yet, run the following command:
+2. Zip up the action:
+
+```
+zip -r checker.zip .
+```
+
+3. Upload the action to Runtime via the following command:
 
 ```
 wsk action create cla-checker --kind nodejs:6 checker.zip --web true
 ```
 
-If you need to update a runtime action, run the following command:
+#### Updating Existing Actions
+
+If you need to update a runtime action, use our handy deploy script:
 
 ```
-wsk action update cla-checker --kind nodejs:6 checker.zip --web true
-```
-
-Protip, run the following command to get the URL of the action to use for
-setting up the GitHub App correctly:
-
-```
-wsk action get cla-checker --url
+./deploy.sh lookup
+./deploy.sh setgithubcheck
+./deploy.sh checker
 ```
 
 ### Debug
@@ -75,9 +77,9 @@ You can go check GitHub webhook delivery payloads and responses on the [CLA Bot'
 App Advanced
 Settings](https://github.com/organizations/adobe/settings/apps/adobe-cla-bot/advanced).
 
-#### Check logs on Adobe Runtime
+#### Check Logs on Adobe Runtime
 
-Get list of actions running on our namespace:
+Get list of action invocations, or _activations_, that executed in our namespace:
 
 ```
 wsk activation list
@@ -88,4 +90,13 @@ retrieve its logs:
 
 ```
 wsk activation get ACTIVATION-LIST-NUMBER
+```
+
+#### Getting URL of Actions
+
+Protip, run the following command to get the URL of the action to use for
+setting up the GitHub App correctly:
+
+```
+wsk action get cla-checker --url
 ```
