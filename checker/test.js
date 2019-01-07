@@ -58,4 +58,13 @@ describe('checker action', function () {
       assert(false);
     });
   });
+  it('should return 400 if pull_request property exists but action is not "opened"', function () {
+    var params = { pull_request: { blah: true }, action: 'review_requested' };
+    return checker.main(params).then(function (result) {
+      assert.strictEqual(result.statusCode, 400);
+      assert(result.body.includes('Not a pull request'));
+    }).catch(function () {
+      assert(false);
+    });
+  });
 });
