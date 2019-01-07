@@ -25,20 +25,14 @@ gets fired from github pr creation webhook.
 
 function main (params) {
   return new Promise((resolve, reject) => {
-    // TODO: we also get 'run checks' payloads from github. should we trigger on
-    // pull request events or on check events? check events may be better as
-    // users can also 'rerequest' checks be rerun. however, check payloads may
-    // be insufficient (see github app payloads under github app -> advanced for
-    // details on this)
-    if (!params.pull_request) {
+    if (!params.pull_request || params.action !== 'opened') {
       return resolve({
         statusCode: 400,
-        body: 'Not a pull request, ignoring'
+        body: 'Not a pull request being opened, ignoring payload'
       });
     }
 
     var ow = openwhisk();
-    // TODO: currently this runs on pull request closed and reopened.
     // TODO: what if the repo is private?
     var github;
     var user = params.pull_request.user.login;
