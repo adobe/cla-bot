@@ -47,5 +47,5 @@ then
 else
     echo "Setting runtime namespace to io-solutions..."
     $WSK property set --namespace io-solutions --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-    $WSK action update cla-lookup --kind nodejs:6 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action update "cla-${ACTION}" --kind nodejs:6 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi
