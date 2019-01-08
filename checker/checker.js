@@ -25,7 +25,7 @@ gets fired from github pr creation webhook.
 
 function main (params) {
   return new Promise((resolve, reject) => {
-    if (!params.pull_request || params.action !== 'opened' || params.action !== 'reopened') {
+    if (!params.pull_request || (params.action !== 'opened' && params.action !== 'reopened')) {
       return resolve({
         statusCode: 400,
         body: 'Not a pull request being opened, ignoring payload'
