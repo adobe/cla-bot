@@ -106,11 +106,13 @@ function lookupSingleAgreement (args, agreement, callback) {
     }, function (_, records) {
       var usernames = [];
       var data = records[0];
-      if (data['Custom Field 8'] !== undefined) {
+      if (data['Custom Field 8'] !== undefined && data['Custom Field 8'].trim() !== '') {
         usernames = data['Custom Field 8'].split(/[\s,\n]+/);
-      } else if (data['Custom Field 1'] !== undefined) {
+      }
+      if (data['Custom Field 1'] !== undefined && data['Custom Field 1'].trim() !== '') {
         usernames.push(data['Custom Field 1']);
-      } else if (data.githubUsername !== undefined) {
+      }
+      if (data.githubUsername !== undefined && data.githubUsername.trim() !== '') {
         usernames.push(data.githubUsername);
       }
       callback(usernames);
