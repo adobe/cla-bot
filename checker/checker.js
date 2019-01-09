@@ -23,7 +23,7 @@ gets fired from github pr creation webhook.
 * if not signed, give an 'x' and tell them to go sign at http://opensource.adobe.com/cla
 */
 
-function main (params) {
+function main(params) {
   console.log(JSON.stringify(config));
   return new Promise((resolve, reject) => {
     if (!params.pull_request || (params.action !== 'opened' && params.action !== 'reopened')) {
@@ -125,7 +125,22 @@ function main (params) {
               }
             });
           }
+          if (response.statusCode !== 200) {
+            return resolve({
+              statusCode: response.statusCode,
+              body: "Error occured while retrieving access_token for Adobe Sign."
+            });
+
+          }
           var access_token = JSON.parse(body).access_token;
+          if (access_token === undefined) {
+            return resolve({
+              statusCode: response.statusCode,
+              body: "Error occured while retrieving access_token for Adobe Sign."
+            });
+
+
+          }
           var options = {
             method: 'GET',
             url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements',
@@ -233,7 +248,7 @@ function main (params) {
   });
 }
 
-function action_required (ow, args) {
+function action_required(ow, args) {
   ow.actions.invoke({
     name: 'cla-setgithubcheck',
     blocking: true,
