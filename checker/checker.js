@@ -23,7 +23,7 @@ gets fired from github pr creation webhook.
 * if not signed, give an 'x' and tell them to go sign at http://opensource.adobe.com/cla
 */
 
-function main(params) {
+function main (params) {
   console.log(JSON.stringify(config));
   return new Promise((resolve, reject) => {
     if (!params.pull_request || (params.action !== 'opened' && params.action !== 'reopened')) {
@@ -245,7 +245,7 @@ function main(params) {
   });
 }
 
-function action_required(ow, args) {
+function action_required (ow, args) {
   ow.actions.invoke({
     name: 'cla-setgithubcheck',
     blocking: true,
