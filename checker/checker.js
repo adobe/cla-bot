@@ -128,18 +128,15 @@ function main(params) {
           if (response.statusCode !== 200) {
             return resolve({
               statusCode: response.statusCode,
-              body: "Error occured while retrieving access_token for Adobe Sign."
+              body: 'Error occured while retrieving access_token for Adobe Sign.'
             });
-
           }
           var access_token = JSON.parse(body).access_token;
           if (access_token === undefined) {
             return resolve({
               statusCode: response.statusCode,
-              body: "Error occured while retrieving access_token for Adobe Sign."
+              body: 'Error occured while retrieving access_token for Adobe Sign.'
             });
-
-
           }
           var options = {
             method: 'GET',
