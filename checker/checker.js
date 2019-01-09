@@ -24,7 +24,6 @@ gets fired from github pr creation webhook.
 */
 
 function main (params) {
-  console.log(JSON.stringify(config));
   return new Promise((resolve, reject) => {
     if (!params.pull_request || (params.action !== 'opened' && params.action !== 'reopened')) {
       return resolve({
