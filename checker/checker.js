@@ -57,7 +57,7 @@ function main (params) {
     app.asInstallation(installation_id).then(function (gh) {
       github = gh;
       return github.orgs.checkMembership({
-        org: 'adobe',
+        org: org,
         username: user
       });
     }).then(function (is_member) {
