@@ -27,6 +27,10 @@ For all actions, make sure to copy `config-sample.json` from the root into the
 relevant folders, rename it to `config.json` and populate it with the correct
 information.
 
+## Running Tests
+
+Make sure you've `npm install`ed, then simply `npm test`.
+
 ## Runtime Actions
 
 These instructions assume you already have openwhisk and a runtime namespace
