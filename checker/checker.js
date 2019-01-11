@@ -27,7 +27,7 @@ function main (params) {
   return new Promise((resolve, reject) => {
     if (!params.pull_request || (params.action !== 'opened' && params.action !== 'reopened')) {
       return resolve({
-        statusCode: 400,
+        statusCode: 202,
         body: 'Not a pull request being opened, ignoring payload'
       });
     }

@@ -15,20 +15,20 @@ var checker = rewire('../checker/checker.js');
 
 describe('checker action', function () {
   describe('ignored events', function () {
-    it('should return 400 if no pull_request property exists', function (done) {
+    it('should return 202 if no pull_request property exists', function (done) {
       var params = {};
       return checker.main(params).then(function (result) {
-        expect(result.statusCode).toBe(400);
+        expect(result.statusCode).toBe(202);
         expect(result.body).toContain('Not a pull request');
         done();
       }).catch(function () {
         fail('Unexpected promise failure');
       });
     });
-    it('should return 400 if pull_request property exists but action is not "opened"', function (done) {
+    it('should return 202 if pull_request property exists but action is not "opened"', function (done) {
       var params = { pull_request: { blah: true }, action: 'review_requested' };
       return checker.main(params).then(function (result) {
-        expect(result.statusCode).toBe(400);
+        expect(result.statusCode).toBe(202);
         expect(result.body).toContain('Not a pull request');
         done();
       }).catch(function () {
