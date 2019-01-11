@@ -4,7 +4,9 @@
   "description": "A GitHub App that checks if contributors have signed a CLA, or are an Adobe employee.",
   "main": "checker/checker.js",
   "scripts": {
-    "test": "mocha checker/test.js && eslint checker lookup setgithubcheck"
+    "test": "npm run test:unit && npm run lint",
+    "lint": "eslint checker lookup setgithubcheck test",
+    "test:unit": "jasmine --config=test/jasmine.json"
   },
   "repository": {
     "type": "git",
@@ -30,9 +32,11 @@
     "eslint": "^5.11.1",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jasmine": "^2.10.1",
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
-    "mocha": "^5.2.0"
+    "jasmine": "^3.3.1",
+    "rewire": "^4.0.1"
   }
 }

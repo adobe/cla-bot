@@ -62,7 +62,8 @@ function main (params) {
       });
     }).then(function (is_member) {
       // if status is 204, user is a member.
-      // if status is 404, user is not a member.
+      // if status is 404, user is not a member - but this triggers the catch in
+      // the promise.
       // more details here: https://developer.github.com/v3/orgs/members/#check-membership
       if (is_member.status === 204) {
         ow.actions.invoke({
