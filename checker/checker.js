@@ -85,6 +85,7 @@ function main (params) {
           // The parameter in this function is defined by the setgithubcheck
           // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
           resolve({
+            statusCode: 200,
             body: check.title
           });
         }).catch(function (err) {
@@ -178,7 +179,7 @@ function main (params) {
                 }
               }).then(function (res) {
                 var usernames = res.body.usernames;
-                if (usernames.map(function (item) { return item.toLowerCase(); }).indexOf(user.toLowerCase()) > -1) {
+                if (usernames.map(function (item) { return item.toLowerCase(); }).includes(user.toLowerCase())) {
                   ow.actions.invoke({
                     name: 'cla-setgithubcheck',
                     blocking: true,
@@ -198,6 +199,7 @@ function main (params) {
                     // The parameter in this function is defined by the setgithubcheck
                     // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
                     resolve({
+                      statusCode: 200,
                       body: check.title
                     });
                   }).catch(function (err) {
@@ -210,8 +212,10 @@ function main (params) {
                     });
                   });
                 } else {
-                  resolve(action_required(ow, args));
+                  return action_required(ow, args);
                 }
+              }).then(function (check) {
+                resolve(check);
               }).catch(function (err) {
                 resolve({
                   statusCode: 500,
@@ -228,7 +232,9 @@ function main (params) {
               // protip: you can see this output from the github app's advanced tab when you dive into the 'deliveries'
             } else {
               // No agreements found, set the GitHub Check to fail
-              resolve(action_required(ow, args));
+              action_required(ow, args).then(function (check) {
+                resolve(check);
+              });
             }
           });
         });
@@ -246,7 +252,7 @@ function main (params) {
 }
 
 function action_required (ow, args) {
-  ow.actions.invoke({
+  return ow.actions.invoke({
     name: 'cla-setgithubcheck',
     blocking: true,
     result: true,
@@ -264,6 +270,7 @@ function action_required (ow, args) {
     }
   }).then(function (check) {
     return {
+      statusCode: 200,
       body: check.title
     };
   }).catch(function (err) {
@@ -271,7 +278,7 @@ function action_required (ow, args) {
       statusCode: 500,
       body: {
         error: err,
-        reason: 'Error during GitHub Check creation.'
+        reason: 'Error during GitHub Check (action_required) creation.'
       }
     };
   });
