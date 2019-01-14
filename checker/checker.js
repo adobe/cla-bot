@@ -263,6 +263,7 @@ function action_required (ow, args) {
       summary: 'No signed agreements were found. Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)! Once signed, close and re-open your pull request to run the check again.\n\n If you are an Adobe employee, you do not have to sign the CLA. Instead contact Adobe\'s Open Source Office about the failure by mentioning them on the pull request with **@adobe/open-source-office** or via email <grp-opensourceoffice@adobe.com>.'
     }
   }).then(function (check) {
+    console.log(JSON.stringify(check));
     return {
       body: check.title
     };
