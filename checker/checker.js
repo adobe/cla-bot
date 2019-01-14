@@ -85,6 +85,7 @@ function main (params) {
           // The parameter in this function is defined by the setgithubcheck
           // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
           resolve({
+            statusCode: 200,
             body: check.title
           });
         }).catch(function (err) {
@@ -198,6 +199,7 @@ function main (params) {
                     // The parameter in this function is defined by the setgithubcheck
                     // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
                     resolve({
+                      statusCode: 200,
                       body: check.title
                     });
                   }).catch(function (err) {
@@ -210,10 +212,10 @@ function main (params) {
                     });
                   });
                 } else {
-                  action_required(ow, args).then(function (res) {
-                    resolve(res);
-                  });
+                  return action_required(ow, args);
                 }
+              }).then(function (check) {
+                resolve(check);
               }).catch(function (err) {
                 resolve({
                   statusCode: 500,
@@ -230,8 +232,8 @@ function main (params) {
               // protip: you can see this output from the github app's advanced tab when you dive into the 'deliveries'
             } else {
               // No agreements found, set the GitHub Check to fail
-              action_required(ow, args).then(function (res) {
-                resolve(res);
+              action_required(ow, args).then(function (check) {
+                resolve(check);
               });
             }
           });
@@ -268,6 +270,7 @@ function action_required (ow, args) {
     }
   }).then(function (check) {
     return {
+      statusCode: 200,
       body: check.title
     };
   }).catch(function (err) {
@@ -275,7 +278,7 @@ function action_required (ow, args) {
       statusCode: 500,
       body: {
         error: err,
-        reason: 'Error during GitHub Check creation.'
+        reason: 'Error during GitHub Check (action_required) creation.'
       }
     };
   });
