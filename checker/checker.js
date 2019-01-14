@@ -178,7 +178,7 @@ function main (params) {
                 }
               }).then(function (res) {
                 var usernames = res.body.usernames;
-                if (usernames.map(function (item) { return item.toLowerCase(); }).indexOf(user.toLowerCase()) > -1) {
+                if (usernames.map(function (item) { return item.toLowerCase(); }).includes(user.toLowerCase())) {
                   ow.actions.invoke({
                     name: 'cla-setgithubcheck',
                     blocking: true,
