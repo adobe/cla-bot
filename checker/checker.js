@@ -210,7 +210,9 @@ function main (params) {
                     });
                   });
                 } else {
-                  resolve(action_required(ow, args));
+                  action_required(ow, args).then(function (res) {
+                    resolve(res);
+                  });
                 }
               }).catch(function (err) {
                 resolve({
@@ -228,7 +230,9 @@ function main (params) {
               // protip: you can see this output from the github app's advanced tab when you dive into the 'deliveries'
             } else {
               // No agreements found, set the GitHub Check to fail
-              resolve(action_required(ow, args));
+              action_required(ow, args).then(function (res) {
+                resolve(res);
+              });
             }
           });
         });
@@ -246,7 +250,7 @@ function main (params) {
 }
 
 function action_required (ow, args) {
-  ow.actions.invoke({
+  return ow.actions.invoke({
     name: 'cla-setgithubcheck',
     blocking: true,
     result: true,
@@ -262,18 +266,6 @@ function action_required (ow, args) {
       title: 'Sign the Adobe CLA!',
       summary: 'No signed agreements were found. Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)! Once signed, close and re-open your pull request to run the check again.\n\n If you are an Adobe employee, you do not have to sign the CLA. Instead contact Adobe\'s Open Source Office about the failure by mentioning them on the pull request with **@adobe/open-source-office** or via email <grp-opensourceoffice@adobe.com>.'
     }
-  }).then(function (check) {
-    return {
-      body: check.title
-    };
-  }).catch(function (err) {
-    return {
-      statusCode: 500,
-      body: {
-        error: err,
-        reason: 'Error during GitHub Check creation.'
-      }
-    };
   });
 }
 
