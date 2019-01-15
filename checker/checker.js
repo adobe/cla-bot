@@ -24,7 +24,7 @@ gets fired from github pr creation webhook.
 */
 
 function main (params) {
-  return new Promise((resolve, reject) => {
+  return new Promise(function (resolve, reject) {
     if (!params.pull_request || (params.action !== 'opened' && params.action !== 'reopened')) {
       return resolve({
         statusCode: 202,
@@ -178,7 +178,7 @@ function main (params) {
                 }
               }).then(function (res) {
                 var usernames = res.body.usernames;
-                if (usernames.map(function (item) { return item.toLowerCase(); }).indexOf(user.toLowerCase()) > -1) {
+                if (usernames.map(function (item) { return item.toLowerCase(); }).includes(user.toLowerCase())) {
                   ow.actions.invoke({
                     name: 'cla-setgithubcheck',
                     blocking: true,
@@ -210,7 +210,9 @@ function main (params) {
                     });
                   });
                 } else {
-                  resolve(action_required(ow, args));
+                  action_required(ow, args).then(function (res) {
+                    resolve(res);
+                  });
                 }
               }).catch(function (err) {
                 resolve({
@@ -228,7 +230,9 @@ function main (params) {
               // protip: you can see this output from the github app's advanced tab when you dive into the 'deliveries'
             } else {
               // No agreements found, set the GitHub Check to fail
-              resolve(action_required(ow, args));
+              action_required(ow, args).then(function (res) {
+                resolve(res);
+              });
             }
           });
         });
@@ -246,7 +250,7 @@ function main (params) {
 }
 
 function action_required (ow, args) {
-  ow.actions.invoke({
+  return ow.actions.invoke({
     name: 'cla-setgithubcheck',
     blocking: true,
     result: true,
