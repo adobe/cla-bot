@@ -9,6 +9,7 @@ module.exports = {
     'indent': ['error', 2],
     'semi': [2, 'always'],
     'no-extra-semi': 2,
-    'camelcase': 'off'
+    'camelcase': 'off',
+    'prefer-promise-reject-errors': 'off'
   }
 };
