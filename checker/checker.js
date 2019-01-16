@@ -22,13 +22,14 @@ gets fired from github pr creation webhook.
 * if signed, give checkmark
 * if not signed, give an 'x' and tell them to go sign at http://opensource.adobe.com/cla
 */
+var valid_pr_events = ['opened', 'reopened', 'synchronize'];
 
 function main (params) {
   return new Promise(function (resolve, reject) {
-    if (!params.pull_request || (params.action !== 'opened' && params.action !== 'reopened')) {
+    if (!params.pull_request || !valid_pr_events.includes(params.action)) {
       return resolve({
         statusCode: 202,
-        body: 'Not a pull request being opened, ignoring payload'
+        body: 'Not a pull request being (re)opened or synchronized, ignoring'
       });
     }
 
