@@ -145,15 +145,15 @@ describe('checker action', function () {
         code: 404,
         message: 'hiren is not a member of the organization'
       }));
-      request_spy.and.callFake(function (options, cb) {
+      request_spy.and.callFake(function (options) {
         if (options.url.includes('agreements')) {
-          cb(null, { statusCode: 200 }, { userAgreementList: [{
+          return Promise.resolve({ userAgreementList: [{
             status: 'SIGNED',
             name: 'Adobe CLA',
             agreementId: '123'
           }] });
         } else {
-          cb(null, { statusCode: 200 }, '{"access_token":"yes"}');
+          return Promise.resolve({ 'access_token': 'yes' });
         }
       });
       openwhisk_stub.actions.invoke.and.callFake(function (params) {
@@ -196,15 +196,15 @@ describe('checker action', function () {
         code: 404,
         message: 'hiren is not a member of the organization'
       }));
-      request_spy.and.callFake(function (options, cb) {
+      request_spy.and.callFake(function (options) {
         if (options.url.includes('agreements')) {
-          cb(null, { statusCode: 200 }, { userAgreementList: [{
+          return Promise.resolve({ userAgreementList: [{
             status: 'SIGNED',
             name: 'Adobe CLA',
             agreementId: '123'
           }] });
         } else {
-          cb(null, { statusCode: 200 }, '{"access_token":"yes"}');
+          return Promise.resolve({ 'access_token': 'yes' });
         }
       });
       openwhisk_stub.actions.invoke.and.callFake(function (params) {
@@ -247,11 +247,11 @@ describe('checker action', function () {
         code: 404,
         message: 'hiren is not a member of the organization'
       }));
-      request_spy.and.callFake(function (options, cb) {
+      request_spy.and.callFake(function (options) {
         if (options.url.includes('agreements')) {
-          cb(null, { statusCode: 200 }, { userAgreementList: [] });
+          return Promise.resolve({ userAgreementList: [] });
         } else {
-          cb(null, { statusCode: 200 }, '{"access_token":"yes"}');
+          return Promise.resolve({ 'access_token': 'yes' });
         }
       });
       openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
