@@ -25,12 +25,19 @@ describe('checker action', function () {
         fail('Unexpected promise failure');
       });
     });
-    it('should return 202 if pull_request property exists but action is not "opened"', function (done) {
+    it('should return 202 if pull_request property exists but action is "review_requested" or "edited"', function (done) {
       var params = { pull_request: { blah: true }, action: 'review_requested' };
       return checker.main(params).then(function (result) {
         expect(result.statusCode).toBe(202);
         expect(result.body).toContain('Not a pull request');
-        done();
+        params.action = 'edited';
+        checker.main(params).then(function (result) {
+          expect(result.statusCode).toBe(202);
+          expect(result.body).toContain('Not a pull request');
+          done();
+        }).catch(function () {
+          fail('Unexpected promise failure');
+        });
       }).catch(function () {
         fail('Unexpected promise failure');
       });
@@ -63,6 +70,35 @@ describe('checker action', function () {
       revert_github_app_mock();
       revert_openwhisk_mock();
       revert_request_mock();
+    });
+    it('should proceed with processing webhook events like pr opened, reopened and synchronize', function (done) {
+      github_api_stub.orgs.checkMembership.and.returnValue(Promise.resolve({
+        status: 204
+      }));
+      openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
+      var events = ['opened', 'reopened', 'synchronize'];
+      var params = events.map(function (event) {
+        return {
+          pull_request: {
+            user: { login: 'hiren' },
+            base: { repo: {
+              owner: { login: 'adobe' },
+              name: 'photoshop'
+            } },
+            head: { sha: '12345' }
+          },
+          action: event,
+          installation: { id: '5431' }
+        };
+      });
+      var promises = params.map(function (param) {
+        return checker.main(param).then(function (response) {
+          expect(response.statusCode).toBe(200);
+        }).catch(function (err) {
+          fail(err);
+        });
+      });
+      Promise.all(promises).then(done);
     });
     it('should invoke the setgithubcheck action with a status of completed if user is a member of org', function (done) {
       var params = {

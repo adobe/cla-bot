@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run test:unit && npm run lint",
     "lint": "eslint checker lookup setgithubcheck test",
-    "test:unit": "jasmine --config=test/jasmine.json"
+    "test:unit": "jasmine --config=test/jasmine.json --reporter=jasmine-console-reporter"
   },
   "repository": {
     "type": "git",
@@ -37,6 +37,7 @@
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
     "jasmine": "^3.3.1",
+    "jasmine-console-reporter": "^3.1.0",
     "rewire": "^4.0.1"
   }
 }
