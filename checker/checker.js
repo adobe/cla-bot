@@ -10,7 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-var request = require('request');
+var request = require('request-promise-native');
 var github_app = require('github-app');
 var openwhisk = require('openwhisk');
 var utils = require('../utils.js');
@@ -103,6 +103,7 @@ function main (params) {
       if (err.code === 404 && err.message.indexOf('is not a member of the org') > -1) {
         // User is not a member of org, check if they signed CLA
         var options = {
+          json: true,
           method: 'POST',
           url: 'https://api.na2.echosign.com/oauth/refresh',
           headers: {
@@ -117,27 +118,12 @@ function main (params) {
           }
         };
 
-        request(options, function (error, response, body) {
-          if (error) {
+        request(options).then(function (response) {
+          var access_token = response.access_token;
+          if (!access_token) {
             return resolve({
               statusCode: 500,
-              body: {
-                error: error,
-                reason: 'Error retrieving Adobe Sign access token.'
-              }
-            });
-          }
-          if (response.statusCode !== 200) {
-            return resolve({
-              statusCode: response.statusCode,
-              body: 'Error occured while retrieving access_token for Adobe Sign.'
-            });
-          }
-          var access_token = JSON.parse(body).access_token;
-          if (access_token === undefined) {
-            return resolve({
-              statusCode: response.statusCode,
-              body: 'Error occured while retrieving access_token for Adobe Sign.'
+              body: 'Empty access_token retrieved from Adobe Sign.'
             });
           }
           var options = {
@@ -152,77 +138,81 @@ function main (params) {
             },
             json: true
           };
-          request(options, function (error, response, body) {
-            if (error) {
-              return resolve({
+          return request(options);
+        }, function (err) {
+          return resolve({
+            statusCode: 500,
+            body: {
+              error: err,
+              reason: 'Error retrieving Adobe Sign access token.'
+            }
+          });
+        }).then(function (body) {
+          if (body.userAgreementList && body.userAgreementList.length) {
+            // We have a few agreements to search through.
+            var agreements = body.userAgreementList.filter(function (agreement) {
+              return (agreement.status === 'SIGNED' && (agreement.name === 'Adobe Contributor License Agreement' || agreement.name === 'Adobe CLA'));
+            }).map(function (agreement) {
+              return agreement.agreementId;
+            });
+            ow.actions.invoke({
+              name: 'cla-lookup',
+              blocking: true,
+              result: true,
+              params: {
+                agreements: agreements,
+                username: user
+              }
+            }).then(function (res) {
+              var usernames = res.body.usernames;
+              if (usernames.map(function (item) { return item.toLowerCase(); }).includes(user.toLowerCase())) {
+                return ow.actions.invoke({
+                  name: 'cla-setgithubcheck',
+                  blocking: true,
+                  result: true,
+                  params: {
+                    installation_id: installation_id,
+                    org: org,
+                    repo: repo,
+                    sha: commit_sha,
+                    status: 'completed',
+                    start_time: start_time,
+                    conclusion: 'success',
+                    title: 'CLA Signed',
+                    summary: 'A Signed CLA has been found for the github user ' + user
+                  }
+                }).then(function (check) {
+                  return {
+                    statusCode: 200,
+                    body: check.title
+                  };
+                });
+              } else {
+                return action_required(ow, args);
+              }
+            }).then(function (check) {
+              resolve(check);
+            }).catch(function (err) {
+              resolve({
                 statusCode: 500,
                 body: {
-                  error: error,
-                  reason: 'Error retrieving Adobe Sign agreements.'
+                  error: err,
+                  reason: 'Error during lookup action.'
                 }
               });
-            }
-
-            if (body.userAgreementList && body.userAgreementList.length) {
-              // We have a few agreements to search through.
-              var agreements = body.userAgreementList.filter(function (agreement) {
-                return (agreement.status === 'SIGNED' && (agreement.name === 'Adobe Contributor License Agreement' || agreement.name === 'Adobe CLA'));
-              }).map(function (agreement) {
-                return agreement.agreementId;
-              });
-              ow.actions.invoke({
-                name: 'cla-lookup',
-                blocking: true,
-                result: true,
-                params: {
-                  agreements: agreements,
-                  username: user
-                }
-              }).then(function (res) {
-                var usernames = res.body.usernames;
-                if (usernames.map(function (item) { return item.toLowerCase(); }).includes(user.toLowerCase())) {
-                  return ow.actions.invoke({
-                    name: 'cla-setgithubcheck',
-                    blocking: true,
-                    result: true,
-                    params: {
-                      installation_id: installation_id,
-                      org: org,
-                      repo: repo,
-                      sha: commit_sha,
-                      status: 'completed',
-                      start_time: start_time,
-                      conclusion: 'success',
-                      title: 'CLA Signed',
-                      summary: 'A Signed CLA has been found for the github user ' + user
-                    }
-                  }).then(function (check) {
-                    // The parameter in this function is defined by the setgithubcheck
-                    // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
-                    return {
-                      statusCode: 200,
-                      body: check.title
-                    };
-                  });
-                } else {
-                  return action_required(ow, args);
-                }
-              }).then(function (check) {
-                resolve(check);
-              }).catch(function (err) {
-                resolve({
-                  statusCode: 500,
-                  body: {
-                    error: err,
-                    reason: 'Error during lookup action.'
-                  }
-                });
-              });
-            } else {
-              // No agreements found, set the GitHub Check to fail
-              action_required(ow, args).then(function (check) {
-                resolve(check);
-              });
+            });
+          } else {
+            // No agreements found, set the GitHub Check to fail
+            action_required(ow, args).then(function (check) {
+              resolve(check);
+            });
+          }
+        }, function (err) {
+          return resolve({
+            statusCode: 500,
+            body: {
+              error: err,
+              reason: 'Error retrieving Adobe Sign agreements.'
             }
           });
         });

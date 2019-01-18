@@ -26,7 +26,8 @@
     "csv-parse": "^4.3.0",
     "github-app": "^4.0.1",
     "openwhisk": "^3.18.0",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5"
   },
   "devDependencies": {
     "cross-env": "^5.2.0",
