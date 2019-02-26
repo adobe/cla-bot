@@ -15,6 +15,16 @@ var checker = rewire('../checker/checker.js');
 
 describe('checker action', function () {
   describe('ignored events', function () {
+    it('should return 202 if pull request is issued by a bot', function (done) {
+      var params = { pull_request: { user: { type: 'Bot' } }, action: 'opened' };
+      return checker.main(params).then(function (result) {
+        expect(result.statusCode).toBe(202);
+        expect(result.body).toContain('issued by a bot');
+        done();
+      }).catch(function () {
+        fail('Unexpected promise failure');
+      });
+    });
     it('should return 202 if no pull_request property exists', function (done) {
       var params = {};
       return checker.main(params).then(function (result) {

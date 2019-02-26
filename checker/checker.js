@@ -32,6 +32,12 @@ function main (params) {
         body: 'Not a pull request being (re)opened or synchronized, ignoring'
       });
     }
+    if (params.pull_request.user.type === 'Bot') {
+      return resolve({
+        statusCode: 202,
+        body: 'Pull request issued by a bot, ignoring'
+      });
+    }
 
     var ow = openwhisk();
     // TODO: what if the repo is private?
