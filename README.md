@@ -60,7 +60,7 @@ zip -r checker.zip .
 3. Upload the action to Runtime via the following command:
 
 ```
-wsk action create cla-checker --kind nodejs:6 checker.zip --web true
+wsk action create cla-checker --kind nodejs:10 checker.zip --web true
 ```
 
 #### Updating Existing Actions
