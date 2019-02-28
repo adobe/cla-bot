@@ -60,7 +60,8 @@ describe('checker action', function () {
     beforeEach(function () {
       github_api_stub = {
         orgs: {
-          checkMembership: jasmine.createSpy('checkMembership spy')
+          checkMembership: jasmine.createSpy('checkMembership spy'),
+          checkPublicMembership: jasmine.createSpy('checkPublicMembership spy')
         }
       };
       app_spy = jasmine.createSpy('github app spy').and.returnValue({
@@ -110,7 +111,7 @@ describe('checker action', function () {
       });
       Promise.all(promises).then(done);
     });
-    it('should invoke the setgithubcheck action with a status of completed if user is a member of org', function (done) {
+    it('should invoke the setgithubcheck action with a status of completed if user is a member of org the PR is issued on', function (done) {
       var params = {
         pull_request: {
           user: { login: 'hiren' },
@@ -138,7 +139,7 @@ describe('checker action', function () {
         fail(err);
       });
     });
-    it('should invoke the setgithubcheck action with a status of completed if user is not a member of org but has signed a cla', function (done) {
+    it('should invoke the setgithubcheck action with a status of completed if user is not a member of org the PR was issued on but has signed a cla', function (done) {
       var params = {
         pull_request: {
           user: { login: 'hiren' },
@@ -240,7 +241,7 @@ describe('checker action', function () {
         fail(err);
       });
     });
-    it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org and no signed CLAs are found exactly matching the user\'s github username', function (done) {
+    it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org and zero signed CLAs exist', function (done) {
       var params = {
         pull_request: {
           user: { login: 'hiren' },
@@ -274,6 +275,152 @@ describe('checker action', function () {
         done();
       }).catch(function (err) {
         fail(err);
+      });
+    });
+    describe('for PRs issued to orgs that are not github.com/adobe, but are adobe-owned', function () {
+      it('should invoke the setgithubcheck action with a status of completed if user is NOT a member of org the PR is issued on but is a member of the adobe org', function (done) {
+        var params = {
+          pull_request: {
+            user: { login: 'hiren' },
+            base: { repo: {
+              owner: { login: 'adobedocs' },
+              name: 'photoshop'
+            } },
+            head: { sha: '12345' }
+          },
+          action: 'opened',
+          installation: { id: '5431' }
+        };
+        // Have the first github org check (within org) fail, but the second one
+        // (in the adobe org) succeed
+        github_api_stub.orgs.checkMembership.and.returnValue(Promise.reject({
+          code: 404,
+          message: 'hiren is not a member of the organization'
+        }));
+        github_api_stub.orgs.checkPublicMembership.and.returnValue(Promise.resolve({
+          status: 204
+        }));
+        openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
+        return checker.main(params).then(function (response) {
+          var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+          expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+          expect(action_invoke_args.params.status).toBe('completed');
+          expect(action_invoke_args.params.title).toContain('Adobe Employee');
+          expect(response.statusCode).toBe(200);
+          done();
+        }).catch(function (err) {
+          fail(err);
+        });
+      });
+      it('should invoke the setgithubcheck action with a status of completed if user is not a member of org the PR was issued on and not a public member of github.com/adobe org but has signed a cla', function (done) {
+        var params = {
+          pull_request: {
+            user: { login: 'hiren' },
+            base: { repo: {
+              owner: { login: 'adobedocs' },
+              name: 'photoshop'
+            } },
+            head: { sha: '12345' }
+          },
+          action: 'opened',
+          installation: { id: '5431' }
+        };
+        github_api_stub.orgs.checkMembership.and.returnValue(Promise.reject({
+          code: 404,
+          message: 'hiren is not a member of the organization'
+        }));
+        github_api_stub.orgs.checkPublicMembership.and.returnValue(Promise.reject({
+          code: 404,
+          message: 'hiren is not a public member of the organization'
+        }));
+        request_spy.and.callFake(function (options) {
+          if (options.url.includes('agreements')) {
+            return Promise.resolve({ userAgreementList: [{
+              status: 'SIGNED',
+              name: 'Adobe CLA',
+              agreementId: '123'
+            }] });
+          } else {
+            return Promise.resolve({ 'access_token': 'yes' });
+          }
+        });
+        openwhisk_stub.actions.invoke.and.callFake(function (params) {
+          if (params.name === 'cla-lookup') {
+            return Promise.resolve({
+              body: {
+                usernames: ['hiren']
+              }
+            });
+          } else {
+          // we are invoking setgithubcheck here
+            return Promise.resolve({});
+          }
+        });
+        return checker.main(params).then(function (response) {
+          var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+          expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+          expect(action_invoke_args.params.status).toBe('completed');
+          expect(action_invoke_args.params.title).toContain('CLA Signed');
+          expect(response.statusCode).toBe(200);
+          done();
+        }).catch(function (err) {
+          fail(err);
+        });
+      });
+      it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org the PR was issued on, not a public member of github.com/adobe and no agreements are found containing the user\'s github username', function (done) {
+        var params = {
+          pull_request: {
+            user: { login: 'hiren' },
+            base: { repo: {
+              owner: { login: 'adobedocs' },
+              name: 'photoshop'
+            } },
+            head: { sha: '12345' }
+          },
+          action: 'opened',
+          installation: { id: '5431' }
+        };
+        github_api_stub.orgs.checkMembership.and.returnValue(Promise.reject({
+          code: 404,
+          message: 'hiren is not a member of the organization'
+        }));
+        github_api_stub.orgs.checkPublicMembership.and.returnValue(Promise.reject({
+          code: 404,
+          message: 'hiren is not a public member of the organization'
+        }));
+        request_spy.and.callFake(function (options) {
+          if (options.url.includes('agreements')) {
+            return Promise.resolve({ userAgreementList: [{
+              status: 'SIGNED',
+              name: 'Adobe CLA',
+              agreementId: '123'
+            }] });
+          } else {
+            return Promise.resolve({ 'access_token': 'yes' });
+          }
+        });
+        openwhisk_stub.actions.invoke.and.callFake(function (params) {
+          if (params.name === 'cla-lookup') {
+            return Promise.resolve({
+              body: {
+                usernames: ['steven']
+              }
+            });
+          } else {
+          // we are invoking setgithubcheck here
+            return Promise.resolve({});
+          }
+        });
+        return checker.main(params).then(function (response) {
+          var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+          expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+          expect(action_invoke_args.params.conclusion).toBe('action_required');
+          expect(action_invoke_args.params.title).toContain('Sign the Adobe CLA');
+          expect(response.statusCode).toBe(200);
+          done();
+        }).catch(function (err) {
+          fail(err);
+        });
       });
     });
   });
