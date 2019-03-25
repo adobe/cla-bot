@@ -291,7 +291,7 @@ function action_required (ow, args) {
       conclusion: 'action_required',
       details_url: 'http://opensource.adobe.com/cla.html',
       title: 'Sign the Adobe CLA!',
-      summary: 'No signed agreements were found. Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)! Once signed, close and re-open your pull request to run the check again.\n\n If you are an Adobe employee, you do not have to sign the CLA. Instead contact Adobe\'s Open Source Office about the failure by mentioning them on the pull request with **@adobe/open-source-office** or via email <grp-opensourceoffice@adobe.com>.'
+      summary: 'No signed agreements were found. Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)! Once signed, close and re-open your pull request to run the check again.\n\n If you are an Adobe employee, you do not have to sign the CLA. Instead [add yourself to the Adobe GitHub Org](https://git.corp.adobe.com/OpenSourceAdvisoryBoard/handbook/blob/master/GitHub-Adobe-Org-Management.md#request-access-to-our-adobe-github-org) to be recognized as an Adobe Employee. Once added to the GitHub Org, close and re-open the pull-request to run the check again.\n\n If you have any questions, contact Adobe\'s Open Source Office by mentioning them on the pull request with **@adobe/open-source-office** or via email <grp-opensourceoffice@adobe.com>.'
     }
   }).then(function (check) {
     return {
