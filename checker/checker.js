@@ -32,12 +32,6 @@ function main (params) {
         body: 'Not a pull request being (re)opened or synchronized, ignoring'
       });
     }
-    if (params.pull_request.user.type === 'Bot') {
-      return resolve({
-        statusCode: 202,
-        body: 'Pull request issued by a bot, ignoring'
-      });
-    }
 
     var ow = openwhisk();
     // TODO: what if the repo is private?
@@ -58,6 +52,10 @@ function main (params) {
       user: user
     };
 
+    if (params.pull_request.user.type === 'Bot') {
+      return set_green_is_bot(resolve, ow, args);
+    }
+
     var app = github_app({
       id: config.githubAppId,
       cert: config.githubKey
@@ -74,7 +72,7 @@ function main (params) {
       // the promise.
       // more details here: https://developer.github.com/v3/orgs/members/#check-membership
       if (is_member.status === 204) {
-        set_adobe_employee(resolve, ow, args, org);
+        set_green_is_adobe_employee(resolve, ow, args, org);
       }
     }).catch(function (err) {
       if (err.code === 404 && err.message.indexOf('is not a member of the org') > -1) {
@@ -93,7 +91,7 @@ function main (params) {
             // the promise.
             // more details here: https://developer.github.com/v3/orgs/members/#check-public-membership
             if (is_member.status === 204) {
-              set_adobe_employee(resolve, ow, args);
+              set_green_is_adobe_employee(resolve, ow, args);
             }
           }).catch(function (err) {
             if (err.code === 404 && err.message.indexOf('is not a public member of the org') > -1) {
@@ -242,7 +240,40 @@ function check_cla (resolve, ow, args) {
   });
 }
 
-function set_adobe_employee (resolve, ow, args, membership_org) {
+function set_green_is_bot (resolve, ow, args) {
+  ow.actions.invoke({
+    name: 'cla-setgithubcheck',
+    blocking: true,
+    result: true,
+    params: {
+      installation_id: args.installation_id,
+      org: args.org,
+      repo: args.repo,
+      sha: args.commit_sha,
+      status: 'completed',
+      start_time: args.start_time,
+      conclusion: 'success',
+      title: '✓ Bot',
+      summary: 'Pull request issued by a bot account, carry on.'
+    }
+  }).then(function (check) {
+    // The parameter in this function is defined by the setgithubcheck
+    // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
+    resolve({
+      statusCode: 200,
+      body: check.title
+    });
+  }).catch(function (err) {
+    resolve({
+      statusCode: 500,
+      body: {
+        error: err,
+        reason: 'Error during GitHub Check creation.'
+      }
+    });
+  });
+}
+function set_green_is_adobe_employee (resolve, ow, args, membership_org) {
   ow.actions.invoke({
     name: 'cla-setgithubcheck',
     blocking: true,
