@@ -15,16 +15,6 @@ var checker = rewire('../checker/checker.js');
 
 describe('checker action', function () {
   describe('ignored events', function () {
-    it('should return 202 if pull request is issued by a bot', function (done) {
-      var params = { pull_request: { user: { type: 'Bot' } }, action: 'opened' };
-      return checker.main(params).then(function (result) {
-        expect(result.statusCode).toBe(202);
-        expect(result.body).toContain('issued by a bot');
-        done();
-      }).catch(function () {
-        fail('Unexpected promise failure');
-      });
-    });
     it('should return 202 if no pull_request property exists', function (done) {
       var params = {};
       return checker.main(params).then(function (result) {
@@ -110,6 +100,31 @@ describe('checker action', function () {
         });
       });
       Promise.all(promises).then(done);
+    });
+    it('should invoke the setgithubcheck action with a status of completed if user is a bot', function (done) {
+      var params = {
+        pull_request: {
+          user: { login: 'greenkeeper', type: 'Bot' },
+          base: { repo: {
+            owner: { login: 'adobe' },
+            name: 'photoshop'
+          } },
+          head: { sha: '12345' }
+        },
+        action: 'opened',
+        installation: { id: '5431' }
+      };
+      openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
+      return checker.main(params).then(function (response) {
+        var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+        expect(action_invoke_args.params.status).toBe('completed');
+        expect(action_invoke_args.params.title).toContain('Bot');
+        expect(response.statusCode).toBe(200);
+        done();
+      }).catch(function (e) {
+        fail(e);
+      });
     });
     it('should invoke the setgithubcheck action with a status of completed if user is a member of org the PR is issued on', function (done) {
       var params = {
