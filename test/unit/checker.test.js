@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 var rewire = require('rewire');
-var checker = rewire('../checker/checker.js');
+var checker = rewire('../../checker/checker.js');
 
 describe('checker action', function () {
   describe('ignored events', function () {

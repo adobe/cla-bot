@@ -3,6 +3,29 @@ echo "deploy.sh pwd: $(pwd)"
 rm -rf dist
 mkdir dist
 ACTION="$1"
+if [ -z "${ACTION}" ]
+then
+    echo "Missing action name as first parameter to script, exiting"
+    exit 1
+fi
+if ! [[ "$ACTION" =~ ^(checker|lookup|setgithubcheck)$ ]]
+then
+    echo "Action name must be one of 'checker', 'lookup' or 'setgithubcheck', exiting"
+    exit 2
+fi
+ENV="$2"
+if [ -z "${ENV}" ]
+then
+    ENV="stage"
+fi
+ACTION_NAME="cla-${ACTION}"
+if [[ "$ENV" = "stage" ]]
+then
+    ACTION_NAME="cla-${ACTION}-stage"
+elif [[ "$ENV" = "production" ]]
+then
+    ACTION_NAME="cla-${ACTION}"
+fi
 WSK="wsk"
 if [ -e wsk ]
 then
@@ -41,11 +64,12 @@ sed -i.bak 's/\.\.\/utils\.js/\.\/utils\.js/' "dist/${ACTION}.js"
 pushd dist
 zip -q -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
 popd
+echo "Deploying ${ACTION_NAME}..."
 if [ -e ~/.wskprops ]
 then
-    $WSK action update "cla-${ACTION}" --kind nodejs:10 "dist/${ACTION}.zip" --web true
+    $WSK action update "${ACTION_NAME}" --kind nodejs:10 "dist/${ACTION}.zip" --web true
 else
     echo "Setting runtime namespace to io-solutions..."
     $WSK property set --namespace io-solutions --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-    $WSK action update "cla-${ACTION}" --kind nodejs:10 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action update "${ACTION_NAME}" --kind nodejs:10 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi

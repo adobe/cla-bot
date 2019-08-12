@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 var rewire = require('rewire');
-var lookup = rewire('../lookup/lookup.js');
+var lookup = rewire('../../lookup/lookup.js');
 
 describe('lookup action', function () {
   describe('failure', function () {

@@ -4,9 +4,10 @@
   "description": "A GitHub App that checks if contributors have signed a CLA, or are an Adobe employee.",
   "main": "checker/checker.js",
   "scripts": {
-    "test": "npm run test:unit && npm run lint",
+    "test": "npm run lint && npm run test:unit && npm run test:integration",
     "lint": "eslint checker lookup setgithubcheck test",
-    "test:unit": "cross-env NODE_ENV=test jasmine --config=test/jasmine.json --reporter=jasmine-console-reporter"
+    "test:unit": "cross-env NODE_ENV=test jasmine --config=test/unit/jasmine.json --reporter=jasmine-console-reporter",
+    "test:integration": "cross-env NODE_ENV=test jasmine --config=test/integration/jasmine.json --reporter=jasmine-console-reporter"
   },
   "repository": {
     "type": "git",
@@ -40,6 +41,7 @@
     "eslint-plugin-standard": "^4.0.0",
     "jasmine": "^3.3.1",
     "jasmine-console-reporter": "^3.1.0",
+    "node-fetch": "^2.6.0",
     "rewire": "^4.0.1"
   }
 }
