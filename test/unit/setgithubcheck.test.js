@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 var rewire = require('rewire');
-var setgithubcheck = rewire('../setgithubcheck/setgithubcheck.js');
+var setgithubcheck = rewire('../../setgithubcheck/setgithubcheck.js');
 
 describe('setgithubcheck action', function () {
   var revert_github_app_mock, app_spy, github_api_stub; // stubbing github app / api calls

@@ -1,16 +1,17 @@
 language: node_js
 node_js:
   - "lts/*"
-branches:
-  only:
-    - master
-    - /^greenkeeper/.*$/
-before_deploy:
+before_install:
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   - travis_retry curl -L https://github.com/apache/incubator-openwhisk-cli/releases/download/latest/OpenWhisk_CLI-latest-linux-amd64.tgz | tar xz -C ~/.local/bin
+script:
+  - npm run lint
+  - npm run test:unit
+  - bash deploy.sh lookup
+  - npm run test:integration
 deploy:
   provider: script
-  script: echo "lc deploy pwd $(pwd)" && bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker
+  script: bash deploy.sh lookup production && bash deploy.sh setgithubcheck production && bash deploy.sh checker production
   on:
     branch: master
