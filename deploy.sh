@@ -69,7 +69,7 @@ if [ -e ~/.wskprops ]
 then
     $WSK action update "${ACTION_NAME}" --kind nodejs:10 "dist/${ACTION}.zip" --web true
 else
-    echo "Setting runtime namespace to io-solutions..."
-    $WSK property set --namespace io-solutions --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    echo "Setting runtime host and auth properties..."
+    $WSK property set --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
     $WSK action update "${ACTION_NAME}" --kind nodejs:10 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi
