@@ -13,6 +13,11 @@ then
     echo "Action name must be one of 'checker', 'lookup' or 'setgithubcheck', exiting"
     exit 2
 fi
+ENV="$2"
+if [ -z "${ENV}" ]
+then
+    ENV="stage"
+fi
 
 # make sure we have all our credentials sorted
 if [ -e "${ACTION}/config.json" ]
@@ -39,13 +44,16 @@ else
     echo "No config.json nor appropriate environment variables found, bombing 💥"
     exit 1
 fi
+# if we are deploying to stage and staging github app creds are provided as env
+# vars, overwrite creds in config
+if [[ "$ENV" = "stage" ]] && [ ! -z "${GITHUB_STAGING_APP_ID}" ] && [ ! -z "${GITHUB_STAGING_KEY}" ]
+then
+    echo "Overwriting GitHub App credentials to staging values provided to environment..."
+    sed -i.bak "s/\"githubKey\": \".*\"/\"githubKey\": \"${GITHUB_STAGING_KEY}\"/g" dist/config.json
+    sed -i.bak "s/\"githubAppId\": \".*\"/\"githubAppId\": \"${GITHUB_STAGING_APP_ID}\"/g" dist/config.json
+fi
 
 # set up action names based on environment
-ENV="$2"
-if [ -z "${ENV}" ]
-then
-    ENV="stage"
-fi
 ACTION_NAME="cla-${ACTION}"
 if [[ "$ENV" = "stage" ]]
 then
@@ -73,12 +81,17 @@ cp -r "${ACTION}/${ACTION}.js" "${ACTION}/node_modules" "${ACTION}/package.json"
 sed -i.bak 's/\.\.\/utils\.js/\.\/utils\.js/' "dist/${ACTION}.js"
 cp utils.js dist/.
 # set the correct action name which may differ based on $ENV
-sed -i.bak "s/cla-$ACTION/$ACTION_NAME/" dist/utils.js
+if [[ $ENV = "stage" ]]
+then
+    echo "Setting action names to -stage in utils.js..."
+    sed -i.bak "s/\(cla-[a-z]*\)/\1-stage/" dist/utils.js
+fi
+rm dist/*.bak
 
 pushd dist
-echo "`dist/` content listing:"
+echo "dist/ content listing:"
 ls -al
-echo "Zipping `dist`/..."
+echo "Zipping dist/..."
 zip -q -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
 popd
 echo "Deploying ${ACTION_NAME}..."
