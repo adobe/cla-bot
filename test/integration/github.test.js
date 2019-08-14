@@ -17,16 +17,17 @@ if (!process.env.TEST_FOUR_PAC) throw new Error('environment variable `TEST_FOUR
 function sleep (ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-async function waitForChecks (github, owner, repo, ref) {
+async function waitForCheck (github, owner, repo, ref) {
   let checks = { total_count: 0, check_suites: [] };
+  let findStagingBot = (suite) => suite && suite.app && suite.app.name && suite.app.name === 'Adobe CLA Bot Staging';
 
-  while (checks.total_count === 0) {
-    console.log(`Waiting 2s for CLA Bot check to land on ${owner}/${repo}#${ref}...`);
+  while (checks.total_count === 0 || !checks.check_suites.some(findStagingBot)) {
+    console.log(`Waiting 2s for CLA Bot Staging check to land on ${owner}/${repo}#${ref}...`);
     await sleep(2000);
     let data = await github.checks.listSuitesForRef({ owner, repo, ref });
     checks = data.data;
   }
-  return checks.check_suites;
+  return checks.check_suites.find(findStagingBot);
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
@@ -83,8 +84,7 @@ describe('github integration tests', () => {
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let checkSuites = await waitForChecks(github, 'adobe', repo, pr.data.head.sha);
-      let suite = checkSuites[0];
+      let suite = await waitForCheck(github, 'adobe', repo, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
     });
   });

@@ -49,8 +49,7 @@ fi
 if [[ "$ENV" = "stage" ]] && [ ! -z "${GITHUB_STAGING_APP_ID}" ] && [ ! -z "${GITHUB_STAGING_KEY}" ]
 then
     echo "Overwriting GitHub App credentials to staging values provided to environment..."
-    sed -i.bak "s/\"githubKey\": \".*\"/\"githubKey\": \"${GITHUB_STAGING_KEY}\"/g" dist/config.json
-    sed -i.bak "s/\"githubAppId\": \".*\"/\"githubAppId\": \"${GITHUB_STAGING_APP_ID}\"/g" dist/config.json
+    node -e "cfg=require('./dist/config.json');cfg.githubKey='${GITHUB_STAGING_KEY}';cfg.githubAppId='${GITHUB_STAGING_APP_ID}';require('fs').writeFileSync('./dist/config.json',JSON.stringify(cfg, null, 2))"
 fi
 
 # set up action names based on environment
