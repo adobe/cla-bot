@@ -11,6 +11,9 @@ governing permissions and limitations under the License.
 */
 
 module.exports = {
+  CHECKER: 'cla-checker',
+  LOOKUP: 'cla-lookup',
+  SETGITHUBCHECK: 'cla-setgithubcheck',
   get_config: function () {
     var fs = require('fs');
     var path = require('path');

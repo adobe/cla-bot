@@ -178,7 +178,7 @@ function check_cla (resolve, ow, args) {
         return agreement.agreementId;
       });
       ow.actions.invoke({
-        name: 'cla-lookup',
+        name: utils.LOOKUP,
         blocking: true,
         result: true,
         params: {
@@ -189,7 +189,7 @@ function check_cla (resolve, ow, args) {
         var usernames = res.body.usernames;
         if (usernames.map(function (item) { return item.toLowerCase(); }).includes(args.user.toLowerCase())) {
           return ow.actions.invoke({
-            name: 'cla-setgithubcheck',
+            name: utils.SETGITHUBCHECK,
             blocking: true,
             result: true,
             params: {
@@ -242,7 +242,7 @@ function check_cla (resolve, ow, args) {
 
 function set_green_is_bot (resolve, ow, args) {
   ow.actions.invoke({
-    name: 'cla-setgithubcheck',
+    name: utils.SETGITHUBCHECK,
     blocking: true,
     result: true,
     params: {
@@ -275,7 +275,7 @@ function set_green_is_bot (resolve, ow, args) {
 }
 function set_green_is_adobe_employee (resolve, ow, args, membership_org) {
   ow.actions.invoke({
-    name: 'cla-setgithubcheck',
+    name: utils.SETGITHUBCHECK,
     blocking: true,
     result: true,
     params: {
@@ -309,7 +309,7 @@ function set_green_is_adobe_employee (resolve, ow, args, membership_org) {
 
 function action_required (ow, args) {
   return ow.actions.invoke({
-    name: 'cla-setgithubcheck',
+    name: utils.SETGITHUBCHECK,
     blocking: true,
     result: true,
     params: {
