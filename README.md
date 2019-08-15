@@ -1,25 +1,31 @@
-# CLA-BOT
+# Adobe CLA Bot [![Build Status](https://travis-ci.com/adobe/cla-bot.svg?branch=master)](https://travis-ci.com/adobe/cla-bot)
 
-This is a GitHub App that checks that pull request issuers to [github.com/adobe](https://github.com/adobe) have signed the [Adobe CLA](http://opensource.adobe.com/cla.html).
+This is a GitHub App that checks that pull request issuers to [github.com/adobe]
+have signed the [Adobe CLA][cla].
+
+You can install the app by visiting the [GitHub App page for it][apppage].
 
 ## Overview
 
-This repo is implemented as a [GitHub App](https://github.com/organizations/adobe/settings/apps/adobe-cla-bot)
-together with a set of Adobe Runtime actions. The app has its Webhook URL
-configured to point to the `checker` action (more on that below).
+This repo is implemented as a [GitHub App][apppage] together with a set of Adobe
+Runtime actions. The app has its Webhook URL configured to point to the `checker`
+action (more on that below).
 
 This repo contains three actions, which are functions that run on a serverless
 (function as a service, or FaaS) platform:
 
-- `./checker` contains an action that runs on every [github.com/adobe](https://github.com/adobe)
-    pull request open and close. Checker's job is to check if the user submitting
-    the pull request has signed the CLA or if the user is an Adobe employee (by
-    checking github.com/adobe organization membership).
-- `./setgithubcheck` contains an action that interacts with the GitHub REST API's
-    [Checks API](https://developer.github.com/v3/checks/runs) to set checkmarks
-    on pull requests. It is invoekd by other actions to communicate pass/fail to
-    pull request authors.
-- `./lookup` contains an action that accepts agreement_id(s) as `agreements` parameter, interacts with Adobe Sign formData APIs, it parses the formData of all the agreements to lookup the github usernames and returns a consolidated list of github usernames.
+- [`./checker`][checker] contains an action that runs on every [github.com/adobe]
+  pull request open, close and synchronize. Checker's job is to check if the user
+  submitting the pull request has signed the [CLA][cla] or if the user is an Adobe or
+  Magento employee (by checking [github.com/adobe] or magento organization membership).
+- [`./setgithubcheck`][setgithubcheck] contains an action that interacts with the
+  GitHub REST API's [Checks API](https://developer.github.com/v3/checks/runs) to
+  set checkmarks on pull requests. It is invoked by other actions to communicate
+  pass/fail to pull request authors.
+- [`./lookup`][lookup] contains an action that accepts `agreement_id`s as `agreements`
+  parameter, interacts with [Adobe Sign formData APIs][formdataapi], it parses the
+  formData of all the agreements to lookup the GitHub usernames in the agreements
+  and returns a consolidated list of GitHub usernames.
 
 ## Requirements
 
@@ -29,7 +35,15 @@ information.
 
 ## Running Tests
 
-Make sure you've `npm install`ed, then simply `npm test`.
+Make sure you've `npm install`ed, then simply `npm test`. This will run the lint
+and unit tests. You can also invoke each of these individually with `npm run
+lint` and `npm run test:unit`.
+
+There are also integration tests against github.com, though you need several
+special environment variables representing github.com personal access tokens to
+run them. It is expected only maintainers of this repo have access to them, and
+they are also stored in travis-ci as encrypted environment variables. These
+tests can be run via `npm run test:integration`.
 
 ## Runtime Actions
 
@@ -39,30 +53,23 @@ you haven't.
 
 ### Deploy
 
+Deployment is automated via the [`deploy.sh`](https://github.com/adobe/cla-bot/tree/master/deploy.sh)
+script.
+
+We maintain two environments, and thus two apps: the production environment and
+a staging environment. We also have a [staging GitHub app][stagingapppage] for
+use with running integration tests.
+
 Each action's name when deployed on Adobe Runtime is `cla-` + the action name
-(subdirectory).
+(subdirectory), i.e. `cla-lookup`, `cla-checker` and `cla-setgithubcheck`. When
+deploying to the staging environment, these action names are additionally
+suffixed with `-stage`.
 
 #### Creating New Actions
 
-1. Install any dependencies of the action:
-
-```
-cd checker
-npm install
-```
-
-2. Zip up the action:
-
-```
-zip -r checker.zip .
-```
-
-3. Upload the action to Runtime via the following command:
-
-```
-wsk action create cla-checker --kind nodejs:10 checker.zip --web true
-```
-
+It is best to create a new directory by copying one of the existing action
+directories and editing the `deploy.sh` script to `create` rather than `update`
+using the `wsk` CLI tools.
 
 #### Updating Existing Actions
 
@@ -74,12 +81,21 @@ If you need to update a runtime action, use our handy deploy script:
 ./deploy.sh checker
 ```
 
+The above will deploy these actions to our staging environment for use by our
+[staging GitHub app][stagingapppage]. You can deploy to production via:
+
+```
+./deploy.sh lookup production
+./deploy.sh setgithubcheck production
+./deploy.sh checker production
+```
+
 #### Creating a GitHub App
 
 This bot is implemented as a [GitHub
 App](https://developer.github.com/apps/building-github-apps/). It can be
 installed on individual repositories or organizations, and sends GitHub webhook
-events from repos/orgs it is installed on to the [`./checker`](./checker)
+events from repos/orgs it is installed on to the [`./checker`][checker]
 action. To set the GitHub App up:
 
 1. In your Organization Settings, under Developer Settings, click on GitHub
@@ -134,3 +150,11 @@ setting up the GitHub App correctly:
 ```
 wsk action get cla-checker --url
 ```
+
+[cla]: https://opensource.adobe.com/cla.html
+[apppage]: https://github.com/apps/adobe-cla-bot
+[stagingapppage]: https://github.com/apps/adobe-cla-bot-staging
+[checker]: https://github.com/adobe/cla-bot/tree/master/checker
+[setgithubcheck]: https://github.com/adobe/cla-bot/tree/master/setgithubcheck
+[lookup]: https://github.com/adobe/cla-bot/tree/master/lookup
+[formdataapi]: https://corporate.na1.echosign.com/public/docs/restapi/v5#!/agreements/getFormData

@@ -1,6 +1,6 @@
 {
   "name": "@adobe/cla-bot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A GitHub App that checks if contributors have signed a CLA, or are an Adobe/Magento employee.",
   "main": "checker/checker.js",
   "scripts": {
