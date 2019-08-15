@@ -10,112 +10,87 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-var request = require('request-promise-native');
-var parse = require('csv-parse');
-var utils = require('../utils.js');
-var config = utils.get_config();
+const request = require('request-promise-native');
+const parse = require('util').promisify(require('csv-parse'));
+const utils = require('../utils.js');
+const config = utils.get_config();
 
-function main (params) {
-  var agreements = [];
+async function main (params) {
+  let agreements = [];
 
-  return new Promise(function (resolve, reject) {
-    // Expects an array of agreement_ids for cla-bot/checker
+  // Expects an array of agreement_ids for cla-bot/checker
+  if (params.agreements && params.agreements.constructor === Array) {
+    agreements = params.agreements;
+  } else if (params.agreements) {
+    agreements.push(params.agreements);
+  } else {
+    return { error: "param 'agreements' not found in request" };
+  }
 
-    if (params.agreements && params.agreements.constructor === Array) {
-      agreements = params.agreements;
-    } else if (params.agreements) {
-      agreements.push(params.agreements);
-    } else {
-      return reject(new Error("param 'agreements' not found in request"));
+  // Get an access_token from a refresh_token for Adobe Sign APIs
+  let response;
+  try {
+    response = await utils.get_adobe_sign_access_token(config);
+  } catch (e) {
+    return utils.action_error(e, 'Error during retrieval of Adobe Sign access token.');
+  }
+  const access_token = response.access_token;
+  if (!access_token) {
+    return { statusCode: 500, body: 'Empty access_token retrieved from Adobe Sign.' };
+  }
+  let usernames;
+  try {
+    usernames = await lookup({
+      agreements: agreements,
+      access_token: access_token
+    });
+  } catch (e) {
+    return utils.action_error(e, 'Error during lookup of agreements.');
+  }
+  return {
+    body: {
+      usernames: usernames
     }
-
-    // Get an access_token from a refresh_token for Adobe Sign APIs
-    // TODO: below is the same as what we use in checker. should we factor this
-    // out?
-    var options = {
-      json: true,
-      method: 'POST',
-      url: 'https://api.na2.echosign.com/oauth/refresh',
-      headers: {
-        'cache-control': 'no-cache',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      form: {
-        client_id: config.signClientID,
-        client_secret: config.signClientSecret,
-        grant_type: 'refresh_token',
-        refresh_token: config.signRefreshToken
-      }
-    };
-
-    request(options).then(function (body) {
-      var access_token = body.access_token;
-      var args = {
-        agreements: agreements,
-        access_token: access_token
-      };
-      return lookup(args);
-    }).then(function (usernames) {
-      resolve({
-        body: {
-          usernames: usernames
-        }
-      });
-    }).catch(reject);
-  });
+  };
 }
 
-function lookup (args) {
-  return new Promise(function (resolve, reject) {
-    var agreements = args.agreements;
-    var usernames = [];
-    var promises = agreements.map(function (agreement) {
-      return lookupSingleAgreement(args, agreement).then(function (users) {
-        usernames = Array.from(new Set(usernames.concat(users)));
-      });
-    });
-    Promise.all(promises).then(function () {
-      resolve(usernames);
-    }).catch(reject);
-  });
+async function lookup (args) {
+  const agreements = args.agreements;
+  let usernames = [];
+  await Promise.all(agreements.map(async function (agreement) {
+    const agreementUsers = await lookupSingleAgreement(args, agreement);
+    usernames = Array.from(new Set(usernames.concat(agreementUsers)));
+  }));
+  return usernames;
 }
 
-function lookupSingleAgreement (args, agreement) {
-  return new Promise(function (resolve, reject) {
-    var access_token = args.access_token;
-
-    var options = {
-      method: 'GET',
-      url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements/' + agreement + '/formData',
-      headers: {
-        'cache-control': 'no-cache',
-        Authorization: 'Bearer ' + access_token
-      }
-    };
-
-    request(options).then(function (body) {
-      // Logic to parse CSV and get the value for Custom Field 8 or Custom Field 1 or githubUsername
-      parse(body.trim(), {
-        columns: true
-      }, function (err, records) {
-        if (err) {
-          return reject(err);
-        }
-        var usernames = [];
-        var data = records[0];
-        if (data['Custom Field 8'] !== undefined && data['Custom Field 8'].trim() !== '') {
-          usernames = data['Custom Field 8'].split(/[\s,\n]+/);
-        }
-        if (data['Custom Field 1'] !== undefined && data['Custom Field 1'].trim() !== '') {
-          usernames.push(data['Custom Field 1']);
-        }
-        if (data.githubUsername !== undefined && data.githubUsername.trim() !== '') {
-          usernames.push(data.githubUsername);
-        }
-        resolve(usernames);
-      });
-    });
-  });
+async function lookupSingleAgreement (args, agreement) {
+  const options = {
+    method: 'GET',
+    url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements/' + agreement + '/formData',
+    headers: {
+      'cache-control': 'no-cache',
+      Authorization: 'Bearer ' + args.access_token
+    }
+  };
+  const response = await request(options);
+  // Logic to parse CSV and get the value for Custom Field 8 or Custom Field 1 or githubUsername
+  const records = await parse(response.trim(), { columns: true });
+  let usernames = [];
+  const data = records[0];
+  if (data['Custom Field 8'] !== undefined && data['Custom Field 8'].trim() !== '') {
+    // CCLA; form fields are a text area that accept multiple employee
+    // usernames
+    usernames = data['Custom Field 8'].split(/[\s,\n]+/);
+  }
+  if (data['Custom Field 1'] !== undefined && data['Custom Field 1'].trim() !== '') {
+    // ICLA; form field is a single text input for a single github username
+    usernames.push(data['Custom Field 1']);
+  }
+  if (data.githubUsername !== undefined && data.githubUsername.trim() !== '') {
+    usernames.push(data.githubUsername);
+  }
+  return usernames;
 }
 
 exports.main = main;

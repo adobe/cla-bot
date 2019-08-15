@@ -10,44 +10,36 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-var rewire = require('rewire');
-var checker = rewire('../../checker/checker.js');
+const rewire = require('rewire');
+let checker = rewire('../../checker/checker.js');
+const utils = require('../../utils.js');
 
 describe('checker action', function () {
   describe('ignored events', function () {
-    it('should return 202 if no pull_request property exists', function (done) {
-      var params = {};
-      return checker.main(params).then(function (result) {
-        expect(result.statusCode).toBe(202);
-        expect(result.body).toContain('Not a pull request');
-        done();
-      }).catch(function () {
-        fail('Unexpected promise failure');
-      });
+    it('should return 202 if no pull_request property exists', async function () {
+      const params = {};
+      let result = await checker.main(params);
+      expect(result.statusCode).toBe(202);
+      expect(result.body).toContain('Not a pull request');
     });
-    it('should return 202 if pull_request property exists but action is "review_requested" or "edited"', function (done) {
-      var params = { pull_request: { blah: true }, action: 'review_requested' };
-      return checker.main(params).then(function (result) {
-        expect(result.statusCode).toBe(202);
-        expect(result.body).toContain('Not a pull request');
-        params.action = 'edited';
-        checker.main(params).then(function (result) {
-          expect(result.statusCode).toBe(202);
-          expect(result.body).toContain('Not a pull request');
-          done();
-        }).catch(function () {
-          fail('Unexpected promise failure');
-        });
-      }).catch(function () {
-        fail('Unexpected promise failure');
-      });
+    it('should return 202 if pull_request property exists but action is "review_requested" or "edited"', async function () {
+      const params = { pull_request: { blah: true }, action: 'review_requested' };
+      let result = await checker.main(params);
+      expect(result.statusCode).toBe(202);
+      expect(result.body).toContain('Not a pull request');
+      params.action = 'edited';
+      result = await checker.main(params);
+      expect(result.statusCode).toBe(202);
+      expect(result.body).toContain('Not a pull request');
     });
   });
   describe('happy path (setting some manner of useful github check to the user)', function () {
-    var revert_github_app_mock, app_spy, github_api_stub; // stubbing github app / api calls
-    var revert_openwhisk_mock, openwhisk_stub; // stubbing github app / api calls
-    var revert_request_mock, request_spy; // stubbing request module
+    let revert_github_app_mock, app_spy, github_api_stub; // stubbing github app / api calls
+    let revert_openwhisk_mock, openwhisk_stub; // stubbing invoking other actions
+    let revert_request_mock, request_spy; // stubbing request module
+    let revert_access_token_mock;
     beforeEach(function () {
+      revert_access_token_mock = spyOn(utils, 'get_adobe_sign_access_token').and.returnValue(Promise.resolve({ access_token: 'token!' }));
       github_api_stub = {
         orgs: {
           checkMembership: jasmine.createSpy('checkMembership spy'),
@@ -68,17 +60,18 @@ describe('checker action', function () {
       revert_request_mock = checker.__set__('request', request_spy);
     });
     afterEach(function () {
+      revert_access_token_mock();
       revert_github_app_mock();
       revert_openwhisk_mock();
       revert_request_mock();
     });
-    it('should proceed with processing webhook events like pr opened, reopened and synchronize', function (done) {
+    it('should proceed with processing webhook events like pr opened, reopened and synchronize', async function () {
       github_api_stub.orgs.checkMembership.and.returnValue(Promise.resolve({
         status: 204
       }));
       openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-      var events = ['opened', 'reopened', 'synchronize'];
-      var params = events.map(function (event) {
+      const events = ['opened', 'reopened', 'synchronize'];
+      const params = events.map(function (event) {
         return {
           pull_request: {
             user: { login: 'hiren' },
@@ -92,17 +85,13 @@ describe('checker action', function () {
           installation: { id: '5431' }
         };
       });
-      var promises = params.map(function (param) {
-        return checker.main(param).then(function (response) {
-          expect(response.statusCode).toBe(200);
-        }).catch(function (err) {
-          fail(err);
-        });
-      });
-      Promise.all(promises).then(done);
+      await Promise.all(params.map(async function (param) {
+        let result = await checker.main(param);
+        expect(result.statusCode).toBe(200);
+      }));
     });
-    it('should invoke the setgithubcheck action with a status of completed if user is a bot', function (done) {
-      var params = {
+    it('should invoke the setgithubcheck action with a status of completed if user is a bot', async function () {
+      const params = {
         pull_request: {
           user: { login: 'greenkeeper', type: 'Bot' },
           base: { repo: {
@@ -115,19 +104,15 @@ describe('checker action', function () {
         installation: { id: '5431' }
       };
       openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-      return checker.main(params).then(function (response) {
-        var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
-        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
-        expect(action_invoke_args.params.status).toBe('completed');
-        expect(action_invoke_args.params.title).toContain('Bot');
-        expect(response.statusCode).toBe(200);
-        done();
-      }).catch(function (e) {
-        fail(e);
-      });
+      let response = await checker.main(params);
+      const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+      expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+      expect(action_invoke_args.params.status).toBe('completed');
+      expect(action_invoke_args.params.title).toContain('Bot');
+      expect(response.statusCode).toBe(200);
     });
-    it('should invoke the setgithubcheck action with a status of completed if user is a member of org the PR is issued on', function (done) {
-      var params = {
+    it('should invoke the setgithubcheck action with a status of completed if user is a member of org the PR is issued on', async function () {
+      const params = {
         pull_request: {
           user: { login: 'hiren' },
           base: { repo: {
@@ -143,19 +128,15 @@ describe('checker action', function () {
         status: 204
       }));
       openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-      return checker.main(params).then(function (response) {
-        var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
-        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
-        expect(action_invoke_args.params.status).toBe('completed');
-        expect(action_invoke_args.params.title).toContain('Adobe Employee');
-        expect(response.statusCode).toBe(200);
-        done();
-      }).catch(function (err) {
-        fail(err);
-      });
+      let response = await checker.main(params);
+      const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+      expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+      expect(action_invoke_args.params.status).toBe('completed');
+      expect(action_invoke_args.params.title).toContain('Adobe Employee');
+      expect(response.statusCode).toBe(200);
     });
-    it('should invoke the setgithubcheck action with a status of completed if user is not a member of org the PR was issued on but has signed a cla', function (done) {
-      var params = {
+    it('should invoke the setgithubcheck action with a status of completed if user is not a member of org the PR was issued on but has signed a cla', async function () {
+      const params = {
         pull_request: {
           user: { login: 'hiren' },
           base: { repo: {
@@ -194,19 +175,15 @@ describe('checker action', function () {
           return Promise.resolve({});
         }
       });
-      return checker.main(params).then(function (response) {
-        var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
-        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
-        expect(action_invoke_args.params.status).toBe('completed');
-        expect(action_invoke_args.params.title).toContain('CLA Signed');
-        expect(response.statusCode).toBe(200);
-        done();
-      }).catch(function (err) {
-        fail(err);
-      });
+      let response = await checker.main(params);
+      const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+      expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+      expect(action_invoke_args.params.status).toBe('completed');
+      expect(action_invoke_args.params.title).toContain('CLA Signed');
+      expect(response.statusCode).toBe(200);
     });
-    it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org and no agreements are found containing the user\'s github username', function (done) {
-      var params = {
+    it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org and no agreements are found containing the user\'s github username', async function () {
+      const params = {
         pull_request: {
           user: { login: 'hiren' },
           base: { repo: {
@@ -245,19 +222,15 @@ describe('checker action', function () {
           return Promise.resolve({});
         }
       });
-      return checker.main(params).then(function (response) {
-        var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
-        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
-        expect(action_invoke_args.params.conclusion).toBe('action_required');
-        expect(action_invoke_args.params.title).toContain('Sign the Adobe CLA');
-        expect(response.statusCode).toBe(200);
-        done();
-      }).catch(function (err) {
-        fail(err);
-      });
+      let response = await checker.main(params);
+      const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+      expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+      expect(action_invoke_args.params.conclusion).toBe('action_required');
+      expect(action_invoke_args.params.title).toContain('Sign the Adobe CLA');
+      expect(response.statusCode).toBe(200);
     });
-    it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org and zero signed CLAs exist', function (done) {
-      var params = {
+    it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org and zero signed CLAs exist', async function () {
+      const params = {
         pull_request: {
           user: { login: 'hiren' },
           base: { repo: {
@@ -281,20 +254,16 @@ describe('checker action', function () {
         }
       });
       openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-      return checker.main(params).then(function (response) {
-        var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
-        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
-        expect(action_invoke_args.params.conclusion).toBe('action_required');
-        expect(action_invoke_args.params.title).toContain('Sign the Adobe CLA');
-        expect(response.statusCode).toBe(200);
-        done();
-      }).catch(function (err) {
-        fail(err);
-      });
+      let response = await checker.main(params);
+      const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+      expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+      expect(action_invoke_args.params.conclusion).toBe('action_required');
+      expect(action_invoke_args.params.title).toContain('Sign the Adobe CLA');
+      expect(response.statusCode).toBe(200);
     });
     describe('for PRs issued to orgs that are not github.com/adobe, but are adobe-owned', function () {
-      it('should invoke the setgithubcheck action with a status of completed if user is NOT a member of org the PR is issued on but is a member of the adobe org', function (done) {
-        var params = {
+      it('should invoke the setgithubcheck action with a status of completed if user is NOT a member of org the PR is issued on but is a member of the adobe org', async function () {
+        const params = {
           pull_request: {
             user: { login: 'hiren' },
             base: { repo: {
@@ -316,19 +285,15 @@ describe('checker action', function () {
           status: 204
         }));
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-        return checker.main(params).then(function (response) {
-          var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
-          expect(action_invoke_args.name).toBe('cla-setgithubcheck');
-          expect(action_invoke_args.params.status).toBe('completed');
-          expect(action_invoke_args.params.title).toContain('Adobe Employee');
-          expect(response.statusCode).toBe(200);
-          done();
-        }).catch(function (err) {
-          fail(err);
-        });
+        let response = await checker.main(params);
+        const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+        expect(action_invoke_args.params.status).toBe('completed');
+        expect(action_invoke_args.params.title).toContain('Adobe Employee');
+        expect(response.statusCode).toBe(200);
       });
-      it('should invoke the setgithubcheck action with a status of completed if user is not a member of org the PR was issued on and not a public member of github.com/adobe org but has signed a cla', function (done) {
-        var params = {
+      it('should invoke the setgithubcheck action with a status of completed if user is not a member of org the PR was issued on and not a public member of github.com/adobe org but has signed a cla', async function () {
+        const params = {
           pull_request: {
             user: { login: 'hiren' },
             base: { repo: {
@@ -371,19 +336,15 @@ describe('checker action', function () {
             return Promise.resolve({});
           }
         });
-        return checker.main(params).then(function (response) {
-          var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
-          expect(action_invoke_args.name).toBe('cla-setgithubcheck');
-          expect(action_invoke_args.params.status).toBe('completed');
-          expect(action_invoke_args.params.title).toContain('CLA Signed');
-          expect(response.statusCode).toBe(200);
-          done();
-        }).catch(function (err) {
-          fail(err);
-        });
+        let response = await checker.main(params);
+        const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+        expect(action_invoke_args.params.status).toBe('completed');
+        expect(action_invoke_args.params.title).toContain('CLA Signed');
+        expect(response.statusCode).toBe(200);
       });
-      it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org the PR was issued on, not a public member of github.com/adobe and no agreements are found containing the user\'s github username', function (done) {
-        var params = {
+      it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org the PR was issued on, not a public member of github.com/adobe and no agreements are found containing the user\'s github username', async function () {
+        const params = {
           pull_request: {
             user: { login: 'hiren' },
             base: { repo: {
@@ -426,16 +387,12 @@ describe('checker action', function () {
             return Promise.resolve({});
           }
         });
-        return checker.main(params).then(function (response) {
-          var action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
-          expect(action_invoke_args.name).toBe('cla-setgithubcheck');
-          expect(action_invoke_args.params.conclusion).toBe('action_required');
-          expect(action_invoke_args.params.title).toContain('Sign the Adobe CLA');
-          expect(response.statusCode).toBe(200);
-          done();
-        }).catch(function (err) {
-          fail(err);
-        });
+        let response = await checker.main(params);
+        const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
+        expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+        expect(action_invoke_args.params.conclusion).toBe('action_required');
+        expect(action_invoke_args.params.title).toContain('Sign the Adobe CLA');
+        expect(response.statusCode).toBe(200);
       });
     });
   });
