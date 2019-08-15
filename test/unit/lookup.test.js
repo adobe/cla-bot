@@ -10,23 +10,23 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-var rewire = require('rewire');
-var lookup = rewire('../../lookup/lookup.js');
+const utils = require('../../utils.js');
+const rewire = require('rewire');
+let lookup = rewire('../../lookup/lookup.js');
 
 describe('lookup action', function () {
   describe('failure', function () {
-    it('should reject if parameters do not contain agreements', function (done) {
-      lookup.main({}).then(function () {
-        fail('unexpected promise resolution');
-      }).catch(function () {
-        done();
-      });
+    it('should reject if parameters do not contain agreements', async function () {
+      let result = await lookup.main({});
+      expect(result.error).toContain('not found');
     });
   });
   describe('happy path', function () {
-    var revert_request_mock, request_spy; // stubbing request module
-    var revert_parse_mock, parse_spy; // stubbing csv-parse module
+    let revert_request_mock, request_spy; // stubbing request module
+    let revert_parse_mock, parse_spy; // stubbing csv-parse module
+    let revert_access_token_mock;
     beforeEach(function () {
+      revert_access_token_mock = spyOn(utils, 'get_adobe_sign_access_token').and.returnValue(Promise.resolve({ access_token: 'gimme ze access codes!' }));
       request_spy = jasmine.createSpy('request spy').and.callFake(function (options) {
         if (options.url.includes('oauth/refresh')) {
           return Promise.resolve({ access_token: 'yes' });
@@ -35,39 +35,30 @@ describe('lookup action', function () {
         }
       });
       revert_request_mock = lookup.__set__('request', request_spy);
-      parse_spy = jasmine.createSpy('parse spy').and.callFake(function (body, opts, cb) {
-        cb(null, [{ githubUsername: 'steve' }]);
-      });
+      parse_spy = jasmine.createSpy('parse spy').and.returnValue(Promise.resolve([{ githubUsername: 'steve' }]));
       revert_parse_mock = lookup.__set__('parse', parse_spy);
     });
     afterEach(function () {
+      revert_access_token_mock();
       revert_request_mock();
       revert_parse_mock();
     });
-    it('should be able to handle a single agreement', function (done) {
-      var params = {
+    it('should be able to handle a single agreement', async function () {
+      const params = {
         agreements: '12345'
       };
-      lookup.main(params).then(function (result) {
-        expect(result.body.usernames).toContain('steve');
-        done();
-      }).catch(function (err) {
-        fail(err);
-      });
+      let result = await lookup.main(params);
+      expect(result.body.usernames).toContain('steve');
     });
-    it('should be able to handle multiple agreements', function (done) {
-      parse_spy.and.callFake(function (body, opts, cb) {
-        cb(null, [{ githubUsername: 'steve' + Math.random() }]);
+    it('should be able to handle multiple agreements', async function () {
+      parse_spy.and.callFake(function () {
+        return Promise.resolve([{ githubUsername: 'steve' + Math.random() }]);
       });
-      var params = {
+      const params = {
         agreements: ['12345', '43561']
       };
-      lookup.main(params).then(function (result) {
-        expect(result.body.usernames.length).toBe(2);
-        done();
-      }).catch(function (err) {
-        fail(err);
-      });
+      let result = await lookup.main(params);
+      expect(result.body.usernames.length).toBe(2);
     });
   });
 });

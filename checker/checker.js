@@ -10,174 +10,162 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-var request = require('request-promise-native');
-var github_app = require('github-app');
-var openwhisk = require('openwhisk');
-var utils = require('../utils.js');
-var config = utils.get_config();
+const request = require('request-promise-native');
+const github_app = require('github-app');
+const openwhisk = require('openwhisk');
+const utils = require('../utils.js');
+const config = utils.get_config();
 /*
-gets fired from github pr creation webhook.
-* Check if they are adobe employee, if yes, give checkmark
+gets fired from github pr creation/update webhook.
+* Check if they are adobe/magento employee, if yes, give checkmark
 * If not an employee, report back if the CLA is already signed
 * if signed, give checkmark
-* if not signed, give an 'x' and tell them to go sign at http://opensource.adobe.com/cla
+* if not signed, give an 'x' and tell them to go sign at https://opensource.adobe.com/cla.html
 */
-var valid_pr_events = ['opened', 'reopened', 'synchronize'];
+const valid_pr_events = ['opened', 'reopened', 'synchronize'];
 
-function main (params) {
-  return new Promise(function (resolve, reject) {
-    if (!params.pull_request || !valid_pr_events.includes(params.action)) {
-      return resolve({
-        statusCode: 202,
-        body: 'Not a pull request being (re)opened or synchronized, ignoring'
-      });
-    }
-
-    var ow = openwhisk();
-    // TODO: what if the repo is private?
-    var github;
-    var user = params.pull_request.user.login;
-    var start_time = (new Date()).toISOString();
-    var org = params.pull_request.base.repo.owner.login;
-    var repo = params.pull_request.base.repo.name;
-    var commit_sha = params.pull_request.head.sha;
-    var installation_id = params.installation.id;
-
-    var args = {
-      start_time: start_time,
-      org: org,
-      repo: repo,
-      commit_sha: commit_sha,
-      installation_id: installation_id,
-      user: user
+async function main (params) {
+  if (!params.pull_request || !valid_pr_events.includes(params.action)) {
+    return {
+      statusCode: 202,
+      body: 'Not a pull request being (re)opened or synchronized, ignoring'
     };
+  }
+  let github;
+  const ow = openwhisk();
+  // TODO: what if the repo is private?
+  const user = params.pull_request.user.login;
+  const start_time = (new Date()).toISOString();
+  const org = params.pull_request.base.repo.owner.login;
+  const repo = params.pull_request.base.repo.name;
+  const commit_sha = params.pull_request.head.sha;
+  const installation_id = params.installation.id;
 
-    if (params.pull_request.user.type === 'Bot') {
-      return set_green_is_bot(resolve, ow, args);
-    }
-
-    var app = github_app({
-      id: config.githubAppId,
-      cert: config.githubKey
-    });
-    app.asInstallation(installation_id).then(function (gh) {
-      github = gh;
-      return github.orgs.checkMembership({
-        org: org,
-        username: user
-      });
-    }).then(function (is_member) {
-      // if status is 204, user is a member.
-      // if status is 404, user is not a member - but this triggers the catch in
-      // the promise.
-      // more details here: https://developer.github.com/v3/orgs/members/#check-membership
-      if (is_member.status === 204) {
-        set_green_is_adobe_employee(resolve, ow, args, org);
-      }
-    }).catch(function (err) {
-      if (err.code === 404 && err.message.indexOf('is not a member of the org') > -1) {
-        // User is not a member of org the PR was issued on
-        if (org !== 'adobe') {
-          // .. but maybe they are a member of the adobe org?
-          // need to use checkPublicMembership here as we don't have permissions
-          // to check for private membership as we are using the installation_id
-          // of the bot on the non-adobe org.
-          github.orgs.checkPublicMembership({
-            org: 'adobe',
-            username: user
-          }).then(function (is_member) {
-            // if status is 204, user is a member.
-            // if status is 404, user is not a member - but this triggers the catch in
-            // the promise.
-            // more details here: https://developer.github.com/v3/orgs/members/#check-public-membership
-            if (is_member.status === 204) {
-              set_green_is_adobe_employee(resolve, ow, args);
-            }
-          }).catch(function (err) {
-            if (err.code === 404 && err.message.indexOf('is not a public member of the org') > -1) {
-              check_cla(resolve, ow, args);
-            } else {
-              return resolve({
-                statusCode: 500,
-                body: {
-                  error: err,
-                  reason: 'Generic error in checker promise chain.'
-                }
-              });
-            }
-          });
-        } else {
-          //  check if they signed CLA
-          check_cla(resolve, ow, args);
-        }
-      } else {
-        return resolve({
-          statusCode: 500,
-          body: {
-            error: err,
-            reason: 'Generic error in checker promise chain.'
-          }
-        });
-      }
-    });
-  });
-}
-
-function check_cla (resolve, ow, args) {
-  var options = {
-    json: true,
-    method: 'POST',
-    url: 'https://api.na2.echosign.com/oauth/refresh',
-    headers: {
-      'cache-control': 'no-cache',
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    form: {
-      client_id: config.signClientID,
-      client_secret: config.signClientSecret,
-      grant_type: 'refresh_token',
-      refresh_token: config.signRefreshToken
-    }
+  const args = {
+    start_time: start_time,
+    org: org,
+    repo: repo,
+    commit_sha: commit_sha,
+    installation_id: installation_id,
+    user: user
   };
 
-  request(options).then(function (response) {
-    var access_token = response.access_token;
-    if (!access_token) {
-      return resolve({
-        statusCode: 500,
-        body: 'Empty access_token retrieved from Adobe Sign.'
-      });
-    }
-    var options = {
-      method: 'GET',
-      url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements',
-      qs: {
-        query: args.user
-      },
-      headers: {
-        'cache-control': 'no-cache',
-        'Access-Token': access_token
-      },
-      json: true
-    };
-    return request(options);
-  }, function (err) {
-    return resolve({
-      statusCode: 500,
-      body: {
-        error: err,
-        reason: 'Error retrieving Adobe Sign access token.'
-      }
+  if (params.pull_request.user.type === 'Bot') {
+    const res = await set_green_is_bot(ow, args);
+    return res;
+  }
+
+  const app = github_app({
+    id: config.githubAppId,
+    cert: config.githubKey
+  });
+
+  try {
+    github = await app.asInstallation(installation_id);
+  } catch (e) {
+    return utils.action_error(e, 'Error retrieving GitHub API instance on behalf of app installation.');
+  }
+  let is_member;
+  try {
+    // checking if user is member of org, has funky logic flow:
+    // if status is 204, user is a member.
+    // if status is 404, user is not a member - but this triggers the catch in
+    // the promise, so flow jumps down to the next catch statement.
+    // more details here: https://developer.github.com/v3/orgs/members/#check-membership
+    is_member = await github.orgs.checkMembership({
+      org: org,
+      username: user
     });
-  }).then(function (body) {
-    if (body.userAgreementList && body.userAgreementList.length) {
-      // We have a few agreements to search through.
-      var agreements = body.userAgreementList.filter(function (agreement) {
-        return (agreement.status === 'SIGNED' && (agreement.name === 'Adobe Contributor License Agreement' || agreement.name === 'Adobe CLA'));
-      }).map(function (agreement) {
-        return agreement.agreementId;
-      });
-      ow.actions.invoke({
+  } catch (e) {
+    if (e.code === 404 && e.message.indexOf('is not a member of the org') > -1) {
+      // User is not a member of org the PR was issued on
+      if (org !== 'adobe') {
+        // .. but maybe they are a member of the adobe org?
+        // need to use checkPublicMembership here as we don't have permissions
+        // to check for private membership as we are using the installation_id
+        // of the bot on the non-adobe org.
+        let public_member;
+        try {
+          public_member = await github.orgs.checkPublicMembership({
+            org: 'adobe',
+            username: user
+          });
+        } catch (e2) {
+          if (e2.code === 404 && e2.message.indexOf('is not a public member of the org') > -1) {
+            // They are not a public member of Adobe org either, so now we go
+            // through CLA checking process.
+            const res = await check_cla(ow, args);
+            return res;
+          } else {
+            return utils.action_error(e2, 'Error during checking of public membership in the Adobe org.');
+          }
+        }
+        // if status is 204, user is a member.
+        // if status is 404, user is not a member - but this triggers the catch in
+        // the promise.
+        // more details here: https://developer.github.com/v3/orgs/members/#check-public-membership
+        if (public_member.status === 204) {
+          const res = await set_green_is_adobe_employee(ow, args);
+          return res;
+        }
+      } else {
+        // This is a PR issued against the Adobe org, and they are not a
+        // memberso we need to check if they signed CLA
+        const res = await check_cla(ow, args);
+        return res;
+      }
+    }
+  }
+  if (is_member.status === 204) {
+    const res = await set_green_is_adobe_employee(ow, args, org);
+    return res;
+  }
+}
+
+async function check_cla (ow, args) {
+  // First get Adobe Sign access token
+  let response;
+  try {
+    response = await utils.get_adobe_sign_access_token(config);
+  } catch (e) {
+    return utils.action_error(e, 'Error during retrieval of Adobe Sign access token.');
+  }
+  const access_token = response.access_token;
+  if (!access_token) {
+    return { statusCode: 500, body: 'Empty access_token retrieved from Adobe Sign.' };
+  }
+
+  // Next we look up signed agreements containing the author's github username in Adobe Sign
+  let options = {
+    method: 'GET',
+    url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements',
+    qs: {
+      query: args.user
+    },
+    headers: {
+      'cache-control': 'no-cache',
+      'Access-Token': access_token
+    },
+    json: true
+  };
+  try {
+    response = await request(options);
+  } catch (e) {
+    return utils.action_error(e, 'Error retrieving Adobe Sign agreements.');
+  }
+  if (response.userAgreementList && response.userAgreementList.length) {
+    // We found agreements containing the github username to search through.
+    let agreements = response.userAgreementList.filter(function (agreement) {
+      return (agreement.status === 'SIGNED' && (agreement.name === 'Adobe Contributor License Agreement' || agreement.name === 'Adobe CLA'));
+    }).map(function (agreement) {
+      return agreement.agreementId;
+    });
+    let lookup_res;
+    // Now we defer to the lookup action to parse the specific fields inside
+    // these agreements containing the github username and ensure the github
+    // usernames are present inside the agreement where they should be
+    try {
+      lookup_res = await ow.actions.invoke({
         name: utils.LOOKUP,
         blocking: true,
         result: true,
@@ -185,159 +173,141 @@ function check_cla (resolve, ow, args) {
           agreements: agreements,
           username: args.user
         }
-      }).then(function (res) {
-        var usernames = res.body.usernames;
-        if (usernames.map(function (item) { return item.toLowerCase(); }).includes(args.user.toLowerCase())) {
-          return ow.actions.invoke({
-            name: utils.SETGITHUBCHECK,
-            blocking: true,
-            result: true,
-            params: {
-              installation_id: args.installation_id,
-              org: args.org,
-              repo: args.repo,
-              sha: args.commit_sha,
-              status: 'completed',
-              start_time: args.start_time,
-              conclusion: 'success',
-              title: 'CLA Signed',
-              summary: 'A Signed CLA has been found for the github user ' + args.user
-            }
-          }).then(function (check) {
-            return {
-              statusCode: 200,
-              body: check.title
-            };
-          });
-        } else {
-          return action_required(ow, args);
-        }
-      }).then(function (check) {
-        resolve(check);
-      }).catch(function (err) {
-        resolve({
-          statusCode: 500,
-          body: {
-            error: err,
-            reason: 'Error during lookup action.'
+      });
+    } catch (e) {
+      return utils.action_error(e, 'Error invoking lookup action when agreements were found.');
+    }
+    let usernames = lookup_res.body.usernames;
+    if (usernames.map(function (item) { return item.toLowerCase(); }).includes(args.user.toLowerCase())) {
+      // If the username exists in the response from the lookup action, then we
+      // can render a green checkmark on the PR!
+      let check_res;
+      try {
+        check_res = await ow.actions.invoke({
+          name: utils.SETGITHUBCHECK,
+          blocking: true,
+          result: true,
+          params: {
+            installation_id: args.installation_id,
+            org: args.org,
+            repo: args.repo,
+            sha: args.commit_sha,
+            status: 'completed',
+            start_time: args.start_time,
+            conclusion: 'success',
+            title: 'CLA Signed',
+            summary: 'A Signed CLA has been found for the GitHub.com user ' + args.user
           }
         });
-      });
+      } catch (e) {
+        return utils.action_error(e, 'Error invoking setgithubcheck when CLA was found.');
+      }
+      return {
+        statusCode: 200,
+        body: check_res.title
+      };
     } else {
-      // No agreements found, set the GitHub Check to fail
-      action_required(ow, args).then(function (check) {
-        resolve(check);
-      });
-    }
-  }, function (err) {
-    return resolve({
-      statusCode: 500,
-      body: {
-        error: err,
-        reason: 'Error retrieving Adobe Sign agreements.'
+      try {
+        const check = await action_required(ow, args);
+        return check;
+      } catch (e) {
+        return utils.action_error(e, 'Error setting Action Required GitHub Check when no usernames were returned from lookup invocation.');
       }
-    });
-  });
+    }
+  } else {
+    // No agreements found, set the GitHub Check to fail
+    try {
+      const check = await action_required(ow, args);
+      return check;
+    } catch (e) {
+      return utils.action_error(e, 'Error setting Action Required GitHub Check when no agreements containing user was found.');
+    }
+  }
 }
 
-function set_green_is_bot (resolve, ow, args) {
-  ow.actions.invoke({
-    name: utils.SETGITHUBCHECK,
-    blocking: true,
-    result: true,
-    params: {
-      installation_id: args.installation_id,
-      org: args.org,
-      repo: args.repo,
-      sha: args.commit_sha,
-      status: 'completed',
-      start_time: args.start_time,
-      conclusion: 'success',
-      title: '✓ Bot',
-      summary: 'Pull request issued by a bot account, carry on.'
-    }
-  }).then(function (check) {
-    // The parameter in this function is defined by the setgithubcheck
-    // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
-    resolve({
-      statusCode: 200,
-      body: check.title
-    });
-  }).catch(function (err) {
-    resolve({
-      statusCode: 500,
-      body: {
-        error: err,
-        reason: 'Error during GitHub Check creation.'
+async function set_green_is_bot (ow, args) {
+  let result;
+  try {
+    result = await ow.actions.invoke({
+      name: utils.SETGITHUBCHECK,
+      blocking: true,
+      result: true,
+      params: {
+        installation_id: args.installation_id,
+        org: args.org,
+        repo: args.repo,
+        sha: args.commit_sha,
+        status: 'completed',
+        start_time: args.start_time,
+        conclusion: 'success',
+        title: '✓ Bot',
+        summary: 'Pull request issued by a bot account, carry on.'
       }
     });
-  });
-}
-function set_green_is_adobe_employee (resolve, ow, args, membership_org) {
-  ow.actions.invoke({
-    name: utils.SETGITHUBCHECK,
-    blocking: true,
-    result: true,
-    params: {
-      installation_id: args.installation_id,
-      org: args.org,
-      repo: args.repo,
-      sha: args.commit_sha,
-      status: 'completed',
-      start_time: args.start_time,
-      conclusion: 'success',
-      title: '✓ Adobe Employee',
-      summary: `Pull request issued by an Adobe Employee (based on membership in github.com/${membership_org}), carry on.`
-    }
-  }).then(function (check) {
-    // The parameter in this function is defined by the setgithubcheck
-    // action's resolve parameter (see setgithubcheck/setgithubcheck.js)
-    resolve({
-      statusCode: 200,
-      body: check.title
-    });
-  }).catch(function (err) {
-    resolve({
-      statusCode: 500,
-      body: {
-        error: err,
-        reason: 'Error during GitHub Check creation.'
-      }
-    });
-  });
+  } catch (e) {
+    return utils.action_error(e, 'Error during GitHub Check creation while setting status to green (via bot).');
+  }
+  return {
+    statusCode: 200,
+    body: result.title
+  };
 }
 
-function action_required (ow, args) {
-  return ow.actions.invoke({
-    name: utils.SETGITHUBCHECK,
-    blocking: true,
-    result: true,
-    params: {
-      installation_id: args.installation_id,
-      org: args.org,
-      repo: args.repo,
-      sha: args.commit_sha,
-      status: 'completed',
-      start_time: args.start_time,
-      conclusion: 'action_required',
-      details_url: 'http://opensource.adobe.com/cla.html',
-      title: 'Sign the Adobe CLA!',
-      summary: 'No signed agreements were found. Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)! Once signed, close and re-open your pull request to run the check again.\n\n If you are an Adobe employee, you do not have to sign the CLA. Instead [add yourself to the Adobe GitHub Org](https://git.corp.adobe.com/OpenSourceAdvisoryBoard/handbook/blob/master/GitHub-Adobe-Org-Management.md#request-access-to-our-adobe-github-org) to be recognized as an Adobe Employee. Once added to the GitHub Org, close and re-open the pull-request to run the check again.\n\n If you have any questions, contact Adobe\'s Open Source Office by mentioning them on the pull request with **@adobe/open-source-office** or via email <grp-opensourceoffice@adobe.com>.'
-    }
-  }).then(function (check) {
-    return {
-      statusCode: 200,
-      body: check.title
-    };
-  }).catch(function (err) {
-    return {
-      statusCode: 500,
-      body: {
-        error: err,
-        reason: 'Error during GitHub Check (action_required) creation.'
+async function set_green_is_adobe_employee (ow, args, membership_org) {
+  let result;
+  try {
+    result = await ow.actions.invoke({
+      name: utils.SETGITHUBCHECK,
+      blocking: true,
+      result: true,
+      params: {
+        installation_id: args.installation_id,
+        org: args.org,
+        repo: args.repo,
+        sha: args.commit_sha,
+        status: 'completed',
+        start_time: args.start_time,
+        conclusion: 'success',
+        title: '✓ Adobe Employee',
+        summary: `Pull request issued by an Adobe Employee (based on membership in github.com/${membership_org}), carry on.`
       }
-    };
-  });
+    });
+  } catch (e) {
+    return utils.action_error(e, 'Error during GitHub Check creation while setting status to green (via employee).');
+  }
+  return {
+    statusCode: 200,
+    body: result.title
+  };
+}
+
+async function action_required (ow, args) {
+  let result;
+  try {
+    result = await ow.actions.invoke({
+      name: utils.SETGITHUBCHECK,
+      blocking: true,
+      result: true,
+      params: {
+        installation_id: args.installation_id,
+        org: args.org,
+        repo: args.repo,
+        sha: args.commit_sha,
+        status: 'completed',
+        start_time: args.start_time,
+        conclusion: 'action_required',
+        details_url: 'https://opensource.adobe.com/cla.html',
+        title: 'Sign the Adobe CLA!',
+        summary: 'No signed agreements were found. Please [sign the Adobe CLA](http://opensource.adobe.com/cla.html)! Once signed, close and re-open your pull request to run the check again.\n\n If you are an Adobe employee, you do not have to sign the CLA. Instead [add yourself to the Adobe GitHub Org](https://git.corp.adobe.com/OpenSourceAdvisoryBoard/handbook/blob/master/GitHub-Adobe-Org-Management.md#request-access-to-our-adobe-github-org) to be recognized as an Adobe Employee. Once added to the GitHub Org, close and re-open the pull-request to run the check again.\n\n If you have any questions, contact Adobe\'s Open Source Office by mentioning them on the pull request with **@adobe/open-source-office** or via email <grp-opensourceoffice@adobe.com>.'
+      }
+    });
+  } catch (e) {
+    return utils.action_error(e, 'Error invoking setgithubcheck during action_required creation.');
+  }
+  return {
+    statusCode: 200,
+    body: result.title
+  };
 }
 
 exports.main = main;

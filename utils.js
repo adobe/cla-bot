@@ -9,16 +9,17 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTA
 OF ANY KIND, either express or implied. See the License for the specific language
 governing permissions and limitations under the License.
 */
+const request = require('request-promise-native');
 
 module.exports = {
   CHECKER: 'cla-checker',
   LOOKUP: 'cla-lookup',
   SETGITHUBCHECK: 'cla-setgithubcheck',
   get_config: function () {
-    var fs = require('fs');
-    var path = require('path');
-    var config_path = path.join(__dirname, 'config.json');
-    var config;
+    const fs = require('fs');
+    const path = require('path');
+    const config_path = path.join(__dirname, 'config.json');
+    let config;
     if (fs.existsSync(config_path)) {
       config = require(config_path);
     } else if (process.env.SIGN_REFRESH_TOKEN && process.env.SIGN_CLIENT_ID && process.env.SIGN_CLIENT_SECRET && process.env.GITHUB_KEY && process.env.GITHUB_APP_ID) {
@@ -35,5 +36,33 @@ module.exports = {
       throw new Error('no config file nor environment variables exist for populating configuration');
     }
     return config;
+  },
+  get_adobe_sign_access_token: async function (config) {
+    const options = {
+      json: true,
+      method: 'POST',
+      url: 'https://api.na2.echosign.com/oauth/refresh',
+      headers: {
+        'cache-control': 'no-cache',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      form: {
+        client_id: config.signClientID,
+        client_secret: config.signClientSecret,
+        grant_type: 'refresh_token',
+        refresh_token: config.signRefreshToken
+      }
+    };
+    const response = await request(options);
+    return response;
+  },
+  action_error: function (e, msg) {
+    return {
+      statusCode: 500,
+      body: {
+        error: e,
+        reason: msg
+      }
+    };
   }
 };

@@ -10,11 +10,11 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-var rewire = require('rewire');
-var setgithubcheck = rewire('../../setgithubcheck/setgithubcheck.js');
+const rewire = require('rewire');
+let setgithubcheck = rewire('../../setgithubcheck/setgithubcheck.js');
 
 describe('setgithubcheck action', function () {
-  var revert_github_app_mock, app_spy, github_api_stub; // stubbing github app / api calls
+  let revert_github_app_mock, app_spy, github_api_stub; // stubbing github app / api calls
   beforeEach(function () {
     github_api_stub = {
       checks: {
@@ -29,22 +29,15 @@ describe('setgithubcheck action', function () {
   afterEach(function () {
     revert_github_app_mock();
   });
-  it('should fail if creating a check fails', function (done) {
+  it('should fail if creating a check fails', async function () {
     github_api_stub.checks.create.and.returnValue(Promise.reject(new Error('boom!')));
-    setgithubcheck.main({}).then(function () {
-      fail('unexpected promise resolution');
-    }).catch(function (err) {
-      expect(err.message).toContain('boom!');
-      done();
-    });
+    let result = await setgithubcheck.main({});
+    expect(result.statusCode).toEqual(500);
+    expect(result.body.error.toString()).toContain('boom!');
   });
-  it('should return title parameter if check passes', function (done) {
+  it('should return title parameter if check passes', async function () {
     github_api_stub.checks.create.and.returnValue(Promise.resolve({}));
-    setgithubcheck.main({ title: 'batman' }).then(function (result) {
-      expect(result.title).toBe('batman');
-      done();
-    }).catch(function (err) {
-      fail(err);
-    });
+    let result = await setgithubcheck.main({ title: 'batman' });
+    expect(result.title).toBe('batman');
   });
 });
