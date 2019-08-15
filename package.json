@@ -1,10 +1,10 @@
 {
   "name": "@adobe/cla-bot",
   "version": "1.0.0",
-  "description": "A GitHub App that checks if contributors have signed a CLA, or are an Adobe employee.",
+  "description": "A GitHub App that checks if contributors have signed a CLA, or are an Adobe/Magento employee.",
   "main": "checker/checker.js",
   "scripts": {
-    "test": "npm run lint && npm run test:unit && npm run test:integration",
+    "test": "npm run lint && npm run test:unit",
     "lint": "eslint checker lookup setgithubcheck test",
     "test:unit": "cross-env NODE_ENV=test jasmine --config=test/unit/jasmine.json --reporter=jasmine-console-reporter",
     "test:integration": "cross-env NODE_ENV=test jasmine --config=test/integration/jasmine.json --reporter=jasmine-console-reporter"

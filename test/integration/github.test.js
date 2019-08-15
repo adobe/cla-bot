@@ -12,6 +12,8 @@ governing permissions and limitations under the License.
 
 const Octokit = require('@octokit/rest');
 
+if (!process.env.TEST_ONE_PAC) throw new Error('environment variable `TEST_ONE_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
+if (!process.env.TEST_TWO_PAC) throw new Error('environment variable `TEST_TWO_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
 if (!process.env.TEST_FOUR_PAC) throw new Error('environment variable `TEST_FOUR_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
 if (!process.env.TEST_MAJ_PAC) throw new Error('environment variable `TEST_MAJ_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
 
@@ -83,7 +85,7 @@ describe('github integration tests', () => {
     });
     beforeAll(createBranch(github, user, repo, newBranch));
     afterAll(deleteBranch(github, user, repo, newBranch));
-    it('should deny a pull request to an adobe repo from author with no signed cla nor org membership', async () => {
+    it('should deny a pull request to an adobe repo', async () => {
       console.log('Creating pull request...');
       let pr = await github.pulls.create({
         owner: 'adobe',
@@ -105,7 +107,51 @@ describe('github integration tests', () => {
     });
     beforeAll(createBranch(github, user, repo, newBranch));
     afterAll(deleteBranch(github, user, repo, newBranch));
-    it('should approve a pull request to an adobe repo from an adobe org member', async () => {
+    it('should approve a pull request to an adobe repo', async () => {
+      console.log('Creating pull request...');
+      let pr = await github.pulls.create({
+        owner: 'adobe',
+        repo,
+        title: `testing build ${newBranch}`,
+        head: `${user}:${newBranch}`,
+        base: 'master'
+      });
+      let suite = await waitForCheck(github, 'adobe', repo, pr.data.head.sha);
+      expect(suite.conclusion).toEqual('success');
+    });
+  });
+  describe('pull requests from user with a signed Adobe ICLA (account adobeiotest1)', () => {
+    const user = 'adobeiotest1';
+    const repo = 'cla-bot-playground';
+    const newBranch = '' + new Date().valueOf();
+    const github = new Octokit({
+      auth: process.env.TEST_ONE_PAC
+    });
+    beforeAll(createBranch(github, user, repo, newBranch));
+    afterAll(deleteBranch(github, user, repo, newBranch));
+    it('should approve a pull request to an adobe repo', async () => {
+      console.log('Creating pull request...');
+      let pr = await github.pulls.create({
+        owner: 'adobe',
+        repo,
+        title: `testing build ${newBranch}`,
+        head: `${user}:${newBranch}`,
+        base: 'master'
+      });
+      let suite = await waitForCheck(github, 'adobe', repo, pr.data.head.sha);
+      expect(suite.conclusion).toEqual('success');
+    });
+  });
+  describe('pull requests from user with a signed Adobe CCLA (account adobeiotest2)', () => {
+    const user = 'adobeiotest2';
+    const repo = 'cla-bot-playground';
+    const newBranch = '' + new Date().valueOf();
+    const github = new Octokit({
+      auth: process.env.TEST_TWO_PAC
+    });
+    beforeAll(createBranch(github, user, repo, newBranch));
+    afterAll(deleteBranch(github, user, repo, newBranch));
+    it('should approve a pull request to an adobe repo', async () => {
       console.log('Creating pull request...');
       let pr = await github.pulls.create({
         owner: 'adobe',
