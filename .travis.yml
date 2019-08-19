@@ -1,6 +1,9 @@
 language: node_js
 node_js:
   - "lts/*"
+branches:
+  only:
+    - master
 before_install:
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
