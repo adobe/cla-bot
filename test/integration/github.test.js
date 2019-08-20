@@ -16,6 +16,18 @@ if (!process.env.TEST_ONE_PAC) throw new Error('environment variable `TEST_ONE_P
 if (!process.env.TEST_TWO_PAC) throw new Error('environment variable `TEST_TWO_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
 if (!process.env.TEST_FOUR_PAC) throw new Error('environment variable `TEST_FOUR_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
 if (!process.env.TEST_MAJ_PAC) throw new Error('environment variable `TEST_MAJ_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
+/*
+ * description of what the github.com personal access tokens above represent:
+ * - TEST_ONE_PAC: PAC for account adobeiotest1. Adobe ICLA signed. not a member
+ *   of any orgs.
+ * - TEST_TWO_PAC: PAC for account adobeiotest2. Adobe CCLA signed. not a member
+ *   of any orgs.
+ * - TEST_FOUR_PAC: PAC for account adobeiotest4. Adobe CCLA signed. member of
+ *   the adobe org and magento org (and part of magento-employees team).
+ * - TEST_MAJ_PAC: PAC for account majtest. no CLA signed. not a member of any
+ *   orgs. added as a _collaborator_ on magento/devops-cla-test and
+ *   magento/devops-cla-test-adcb
+ */
 
 function createBranch (github, user, repo, newBranch) {
   return async function () {
@@ -78,14 +90,14 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 describe('github integration tests', () => {
   describe('pull requests from user with no signed cla nor member of any org (account majtest)', () => {
     const user = 'majtest';
-    const repo = 'cla-bot-playground';
     const newBranch = '' + new Date().valueOf();
     const github = new Octokit({
       auth: process.env.TEST_MAJ_PAC
     });
-    beforeAll(createBranch(github, user, repo, newBranch));
-    afterAll(deleteBranch(github, user, repo, newBranch));
     it('should deny a pull request to an adobe repo', async () => {
+      const repo = 'cla-bot-playground';
+      let setup = createBranch(github, user, repo, newBranch);
+      await setup();
       console.log('Creating pull request...');
       let pr = await github.pulls.create({
         owner: 'adobe',
@@ -96,19 +108,38 @@ describe('github integration tests', () => {
       });
       let suite = await waitForCheck(github, 'adobe', repo, pr.data.head.sha);
       expect(suite.conclusion).not.toEqual('success');
+      let teardown = deleteBranch(github, user, repo, newBranch);
+      await teardown();
+    });
+    it('should deny a pull request to a magento repo', async () => {
+      const repo = 'devops-cla-test-adcb';
+      let setup = createBranch(github, user, repo, newBranch);
+      await setup();
+      console.log('Creating pull request...');
+      let pr = await github.pulls.create({
+        owner: 'magento',
+        repo,
+        title: `testing build ${newBranch}`,
+        head: `${user}:${newBranch}`,
+        base: 'master'
+      });
+      let suite = await waitForCheck(github, 'magento', repo, pr.data.head.sha);
+      expect(suite.conclusion).not.toEqual('success');
+      let teardown = deleteBranch(github, user, repo, newBranch);
+      await teardown();
     });
   });
-  describe('pull requests from user in the adobe org (account adobeiotest4)', () => {
+  describe('pull requests from user who is a member of the adobe or magento orgs (account adobeiotest4)', () => {
     const user = 'adobeiotest4';
-    const repo = 'cla-bot-playground';
     const newBranch = '' + new Date().valueOf();
     const github = new Octokit({
       auth: process.env.TEST_FOUR_PAC
     });
-    beforeAll(createBranch(github, user, repo, newBranch));
-    afterAll(deleteBranch(github, user, repo, newBranch));
     it('should approve a pull request to an adobe repo', async () => {
-      console.log('Creating pull request...');
+      const repo = 'cla-bot-playground';
+      let setup = createBranch(github, user, repo, newBranch);
+      await setup();
+      console.log(`Creating pull request to adobe/${repo}...`);
       let pr = await github.pulls.create({
         owner: 'adobe',
         repo,
@@ -118,6 +149,25 @@ describe('github integration tests', () => {
       });
       let suite = await waitForCheck(github, 'adobe', repo, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
+      let teardown = deleteBranch(github, user, repo, newBranch);
+      await teardown();
+    });
+    it('should approve a pull request to a private magento repo', async () => {
+      const repo = 'devops-cla-test';
+      let setup = createBranch(github, user, repo, newBranch);
+      await setup();
+      console.log(`Creating pull request to magento/${repo}...`);
+      let pr = await github.pulls.create({
+        owner: 'magento',
+        repo,
+        title: `testing build ${newBranch}`,
+        head: `${user}:${newBranch}`,
+        base: 'master'
+      });
+      let suite = await waitForCheck(github, 'magento', repo, pr.data.head.sha);
+      expect(suite.conclusion).toEqual('success');
+      let teardown = deleteBranch(github, user, repo, newBranch);
+      await teardown();
     });
   });
   describe('pull requests from user with a signed Adobe ICLA (account adobeiotest1)', () => {
