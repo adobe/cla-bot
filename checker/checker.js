@@ -33,7 +33,6 @@ async function main (params) {
   }
   let github;
   const ow = openwhisk();
-  // TODO: what if the repo is private?
   const user = params.pull_request.user.login;
   const start_time = (new Date()).toISOString();
   const org = params.pull_request.base.repo.owner.login;
