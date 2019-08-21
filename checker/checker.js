@@ -23,6 +23,7 @@ gets fired from github pr creation/update webhook.
 * if not signed, give an 'x' and tell them to go sign at https://opensource.adobe.com/cla.html
 */
 const valid_pr_events = ['opened', 'reopened', 'synchronize'];
+const MAGENTO_EMPLOYEES_TEAM = 2032477;
 
 async function main (params) {
   if (!params.pull_request || !valid_pr_events.includes(params.action)) {
@@ -64,60 +65,86 @@ async function main (params) {
   } catch (e) {
     return utils.action_error(e, 'Error retrieving GitHub API instance on behalf of app installation.');
   }
-  let is_member;
-  try {
-    // checking if user is member of org, has funky logic flow:
-    // if status is 204, user is a member.
-    // if status is 404, user is not a member - but this triggers the catch in
-    // the promise, so flow jumps down to the next catch statement.
-    // more details here: https://developer.github.com/v3/orgs/members/#check-membership
-    is_member = await github.orgs.checkMembership({
-      org: org,
-      username: user
-    });
-  } catch (e) {
-    if (e.code === 404 && e.message.indexOf('is not a member of the org') > -1) {
-      // User is not a member of org the PR was issued on
-      if (org !== 'adobe') {
-        // .. but maybe they are a member of the adobe org?
-        // need to use checkPublicMembership here as we don't have permissions
-        // to check for private membership as we are using the installation_id
-        // of the bot on the non-adobe org.
-        let public_member;
-        try {
-          public_member = await github.orgs.checkPublicMembership({
-            org: 'adobe',
-            username: user
-          });
-        } catch (e2) {
-          if (e2.code === 404 && e2.message.indexOf('is not a public member of the org') > -1) {
-            // They are not a public member of Adobe org either, so now we go
-            // through CLA checking process.
-            const res = await check_cla(ow, args);
-            return res;
-          } else {
-            return utils.action_error(e2, 'Error during checking of public membership in the Adobe org.');
-          }
-        }
-        // if status is 204, user is a member.
-        // if status is 404, user is not a member - but this triggers the catch in
-        // the promise.
-        // more details here: https://developer.github.com/v3/orgs/members/#check-public-membership
-        if (public_member.status === 204) {
-          const res = await set_green_is_adobe_employee(ow, args);
-          return res;
-        }
-      } else {
-        // This is a PR issued against the Adobe org, and they are not a
-        // memberso we need to check if they signed CLA
+
+  // Check if author is employee; this has separate logic for Adobe vs. Magento
+  // employees.
+  let is_employee;
+  if (org === 'magento') {
+    // For the magento org, we need to see if the user is a member of the
+    // magento-employees team to determine whether they are an employee
+    // m.then(gh => gh.teams.getMembership({ team_id: teamId, username: user }).then(result => console.log(`${user} is a ${result.data.state} ${result.data.role} of the magento-employees team`)).catch(err => { console.error(`${user} got membership in magento-employees team result of "${err.message}"!`); }));
+    try {
+      is_employee = await github.teams.getMembership({
+        team_id: MAGENTO_EMPLOYEES_TEAM,
+        username: user
+      });
+    } catch (e) {
+      if (e.message.includes('Not Found')) {
         const res = await check_cla(ow, args);
         return res;
+      } else {
+        return utils.action_error(e, 'Error during checking of Magento employees membership in the Magento org.');
       }
     }
-  }
-  if (is_member.status === 204) {
     const res = await set_green_is_adobe_employee(ow, args, org);
     return res;
+  } else {
+    // For non-Magento orgs, as long as user is a member of the org, they are
+    // considered an employee
+    try {
+      // checking if user is member of org, has funky logic flow:
+      // if status is 204, user is a member.
+      // if status is 404, user is not a member - but this triggers the catch in
+      // the promise, so flow jumps down to the next catch statement.
+      // more details here: https://developer.github.com/v3/orgs/members/#check-membership
+      is_employee = await github.orgs.checkMembership({
+        org: org,
+        username: user
+      });
+    } catch (e) {
+      if (e.code === 404 && e.message.indexOf('is not a member of the org') > -1) {
+        // User is not a member of org the PR was issued on
+        if (org !== 'adobe') {
+          // .. but maybe they are a member of the adobe org?
+          // need to use checkPublicMembership here as we don't have permissions
+          // to check for private membership as we are using the installation_id
+          // of the bot on the non-adobe org.
+          let public_member;
+          try {
+            public_member = await github.orgs.checkPublicMembership({
+              org: 'adobe',
+              username: user
+            });
+          } catch (e2) {
+            if (e2.code === 404 && e2.message.indexOf('is not a public member of the org') > -1) {
+              // They are not a public member of Adobe org either, so now we go
+              // through CLA checking process.
+              const res = await check_cla(ow, args);
+              return res;
+            } else {
+              return utils.action_error(e2, 'Error during checking of public membership in the Adobe org.');
+            }
+          }
+          // if status is 204, user is a member.
+          // if status is 404, user is not a member - but this triggers the catch in
+          // the promise.
+          // more details here: https://developer.github.com/v3/orgs/members/#check-public-membership
+          if (public_member.status === 204) {
+            const res = await set_green_is_adobe_employee(ow, args);
+            return res;
+          }
+        } else {
+          // This is a PR issued against the Adobe org, and they are not a
+          // member so we need to check if they signed CLA
+          const res = await check_cla(ow, args);
+          return res;
+        }
+      }
+    }
+    if (is_employee.status === 204) {
+      const res = await set_green_is_adobe_employee(ow, args, org);
+      return res;
+    }
   }
 }
 
@@ -253,6 +280,12 @@ async function set_green_is_bot (ow, args) {
 }
 
 async function set_green_is_adobe_employee (ow, args, membership_org) {
+  let company = 'Adobe';
+  let reason = `membership in github.com/${membership_org}`;
+  if (membership_org === 'magento') {
+    company += ' (Magento)';
+    reason = `membership in github.com/magento's employees team`;
+  }
   let result;
   try {
     result = await ow.actions.invoke({
@@ -267,8 +300,8 @@ async function set_green_is_adobe_employee (ow, args, membership_org) {
         status: 'completed',
         start_time: args.start_time,
         conclusion: 'success',
-        title: '✓ Adobe Employee',
-        summary: `Pull request issued by an Adobe Employee (based on membership in github.com/${membership_org}), carry on.`
+        title: `✓ ${company} Employee`,
+        summary: `Pull request issued by an Adobe Employee (based on ${reason}), carry on.`
       }
     });
   } catch (e) {
