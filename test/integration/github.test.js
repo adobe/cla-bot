@@ -81,7 +81,7 @@ function sleep (ms) {
 }
 async function waitForCheck (github, owner, repo, ref) {
   let checks = { total_count: 0, check_suites: [] };
-  let findStagingBot = (suite) => suite && suite.app && suite.app.name && suite.app.name === 'Adobe CLA Bot Staging';
+  let findStagingBot = (suite) => suite && suite.app && suite.app.name && suite.app.name === 'Adobe CLA Bot Staging' && suite.conclusion != null;
 
   while (checks.total_count === 0 || !checks.check_suites.some(findStagingBot)) {
     console.log(`Waiting 2s for CLA Bot Staging check to land on ${owner}/${repo}#${ref}...`);
