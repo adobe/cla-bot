@@ -26,6 +26,10 @@ async function main (params) {
   } else {
     return { error: "param 'agreements' not found in request" };
   }
+  let apiVersion = 'v5';
+  if (params.apiVersion) {
+    apiVersion = params.apiVersion;
+  }
 
   // Get an access_token from a refresh_token for Adobe Sign APIs
   let response;
@@ -42,10 +46,11 @@ async function main (params) {
   try {
     usernames = await lookup({
       agreements: agreements,
-      access_token: access_token
+      access_token: access_token,
+      apiVersion
     });
   } catch (e) {
-    return utils.action_error(e, 'Error during lookup of agreements.');
+    return utils.action_error(e, `Error during lookup of agreements using API version ${apiVersion} (params: ${JSON.stringify(params)}).`);
   }
   return {
     body: {
@@ -67,7 +72,7 @@ async function lookup (args) {
 async function lookupSingleAgreement (args, agreement) {
   const options = {
     method: 'GET',
-    url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements/' + agreement + '/formData',
+    url: `https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`,
     headers: {
       'cache-control': 'no-cache',
       Authorization: 'Bearer ' + args.access_token

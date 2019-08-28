@@ -29,13 +29,12 @@ async function main (params) {
   } catch (e) {
     return utils.action_error(e, 'Error retrieving GitHub API instance on behalf of app installation.');
   }
-  const options = {
+  let options = {
     owner: params.org,
     repo: params.repo,
     name: 'Adobe CLA Signed?',
     head_sha: params.sha,
     status: params.status,
-    started_at: params.start_time,
     conclusion: params.conclusion,
     completed_at: (new Date()).toISOString(),
     output: {
@@ -43,6 +42,7 @@ async function main (params) {
       summary: params.summary
     }
   };
+  if (params.start_time) options.started_at = params.start_time;
   if (params.details_url) options.details_url = params.details_url;
   try {
     await github.checks.create(options);

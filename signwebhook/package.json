@@ -1,0 +1,21 @@
+{
+  "name": "signwebhook",
+  "version": "1.0.0",
+  "description": "cla-bot adobe sign webhook for adobe ",
+  "main": "./signwebhook.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node signwebhook.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:adobe/cla-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5",
+    "github-app": "^4.0.1"
+  }
+}
