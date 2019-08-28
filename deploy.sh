@@ -8,9 +8,9 @@ then
     echo "Missing action name as first parameter to script, exiting"
     exit 1
 fi
-if ! [[ "$ACTION" =~ ^(checker|lookup|setgithubcheck)$ ]]
+if ! [[ "$ACTION" =~ ^(checker|lookup|setgithubcheck|signwebhook)$ ]]
 then
-    echo "Action name must be one of 'checker', 'lookup' or 'setgithubcheck', exiting"
+    echo "Action name must be one of 'checker', 'lookup', 'setgithubcheck' or 'signwebhook', exiting"
     exit 2
 fi
 ENV="$2"

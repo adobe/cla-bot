@@ -15,6 +15,7 @@ module.exports = {
   CHECKER: 'cla-checker',
   LOOKUP: 'cla-lookup',
   SETGITHUBCHECK: 'cla-setgithubcheck',
+  SIGNWEBHOOK: 'cla-signwebhook',
   get_config: function () {
     const fs = require('fs');
     const path = require('path');
