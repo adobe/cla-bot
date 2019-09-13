@@ -26,6 +26,13 @@ This repo contains three actions, which are functions that run on a serverless
   parameter, interacts with [Adobe Sign formData APIs][formdataapi], it parses the
   formData of all the agreements to lookup the GitHub usernames in the agreements
   and returns a consolidated list of GitHub usernames.
+- [`./signwebhook`][signwebhook] contains an action that receives event payloads
+  from Adobe Sign when users sign our CLA agreement. This enables a push-based
+  flow and foregoes the user having to take additional steps after they sign our
+  CLA. This action will look up the details of the signed agreement, extract the
+  user's GitHub username, and then search through our orgs for any open pull
+  requests from the user, and finally invoke the [`./setgithubcheck`][setgithubcheck]
+  action to set a nice green checkmark on their PRs.
 
 ## Requirements
 
@@ -61,9 +68,9 @@ a staging environment. We also have a [staging GitHub app][stagingapppage] for
 use with running integration tests.
 
 Each action's name when deployed on Adobe Runtime is `cla-` + the action name
-(subdirectory), i.e. `cla-lookup`, `cla-checker` and `cla-setgithubcheck`. When
-deploying to the staging environment, these action names are additionally
-suffixed with `-stage`.
+(subdirectory), i.e. `cla-lookup`, `cla-checker`, `cla-setgithubcheck` and
+`cla-signwebhook`. When deploying to the staging environment, these action names
+are additionally suffixed with `-stage`.
 
 #### Creating New Actions
 
@@ -79,6 +86,7 @@ If you need to update a runtime action, use our handy deploy script:
 ./deploy.sh lookup
 ./deploy.sh setgithubcheck
 ./deploy.sh checker
+./deploy.sh signwebhook
 ```
 
 The above will deploy these actions to our staging environment for use by our
@@ -88,7 +96,10 @@ The above will deploy these actions to our staging environment for use by our
 ./deploy.sh lookup production
 ./deploy.sh setgithubcheck production
 ./deploy.sh checker production
+./deploy.sh signwebhook production
 ```
+
+**NOTE**: The `signwebhook` action _only runs in production_.
 
 #### Creating a GitHub App
 
@@ -157,4 +168,5 @@ wsk action get cla-checker --url
 [checker]: https://github.com/adobe/cla-bot/tree/master/checker
 [setgithubcheck]: https://github.com/adobe/cla-bot/tree/master/setgithubcheck
 [lookup]: https://github.com/adobe/cla-bot/tree/master/lookup
+[signwebhook]: https://github.com/adobe/cla-bot/tree/master/signwebhook
 [formdataapi]: https://corporate.na1.echosign.com/public/docs/restapi/v5#!/agreements/getFormData
