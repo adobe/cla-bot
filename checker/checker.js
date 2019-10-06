@@ -335,7 +335,7 @@ No signed agreements were found. Please [sign the Adobe CLA](http://opensource.a
 
 If you are an Adobe employee, you do not have to sign the CLA. Instead [add yourself to the Adobe GitHub Org](https://git.corp.adobe.com/OpenSourceAdvisoryBoard/handbook/blob/master/GitHub-Adobe-Org-Management.md#request-access-to-our-adobe-github-org) to be recognized as an Adobe Employee. Once added to the GitHub Org, close and re-open the pull-request to run the check again.
 
-If you have any questions, contact Adobe\'s Open Source Office by mentioning them on the pull request with **@adobe/open-source-office** or via email <grp-opensourceoffice@adobe.com>.
+If you have any questions, contact Adobe's Open Source Office by mentioning them on the pull request with **@adobe/open-source-office** or via email <grp-opensourceoffice@adobe.com>.
 
 If you believe this was a mistake, please report an issue at [adobe/cla-bot](https://github.com/adobe/cla-bot/issues).`
       }
