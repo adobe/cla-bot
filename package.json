@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/adobe/cla-bot#readme",
   "dependencies": {
-    "csv-parse": "^4.3.0",
+    "csv-parse": "^4.6.3",
     "github-app": "^4.0.1",
     "openwhisk": "^3.18.0",
     "request": "^2.88.0",
