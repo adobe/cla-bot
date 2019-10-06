@@ -11,8 +11,8 @@ before_install:
 script:
   - npm run lint
   - npm run test:unit
-  - bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
-  - npm run test:integration
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook; fi
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then npm run test:integration; fi
 deploy:
   provider: script
   script: bash deploy.sh lookup production && bash deploy.sh setgithubcheck production && bash deploy.sh checker production && bash deploy.sh signwebhook production
