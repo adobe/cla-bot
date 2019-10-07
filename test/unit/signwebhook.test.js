@@ -12,12 +12,12 @@ governing permissions and limitations under the License.
 
 // const utils = require('../../utils.js');
 const rewire = require('rewire');
-let webhook = rewire('../../signwebhook/signwebhook.js');
+const webhook = rewire('../../signwebhook/signwebhook.js');
 
 describe('signwebhook action', function () {
   describe('failure', function () {
     it('should reject if parameters do not contain agreements', async function () {
-      let result = await webhook.main({});
+      const result = await webhook.main({});
       expect(result.body).toContain('Insufficient parameters');
     });
   });

@@ -40,12 +40,12 @@ function createBranch (github, user, repo, newBranch) {
   return async function () {
     console.log('\n[setup]');
     console.log(`Getting ${user}/${repo} HEAD reference...`);
-    let headRef = await github.git.getRef({
+    const headRef = await github.git.getRef({
       owner: user,
       repo,
       ref: 'heads/master'
     });
-    let headSha = headRef.data.object.sha;
+    const headSha = headRef.data.object.sha;
     console.log(`Creating branch ${newBranch} on ${user}/${repo}...`);
     await github.git.createRef({
       owner: user,
@@ -81,12 +81,12 @@ function sleep (ms) {
 }
 async function waitForCheck (github, owner, repo, ref) {
   let checks = { total_count: 0, check_suites: [] };
-  let findStagingBot = (suite) => suite && suite.app && suite.app.name && suite.app.name === 'Adobe CLA Bot Staging' && suite.conclusion != null;
+  const findStagingBot = (suite) => suite && suite.app && suite.app.name && suite.app.name === 'Adobe CLA Bot Staging' && suite.conclusion != null;
 
   while (checks.total_count === 0 || !checks.check_suites.some(findStagingBot)) {
     console.log(`Waiting 2s for CLA Bot Staging check to land on ${owner}/${repo}#${ref}...`);
     await sleep(2000);
-    let data = await github.checks.listSuitesForRef({ owner, repo, ref });
+    const data = await github.checks.listSuitesForRef({ owner, repo, ref });
     checks = data.data;
   }
   return checks.check_suites.find(findStagingBot);
@@ -102,35 +102,35 @@ describe('github integration tests', () => {
       auth: process.env.TEST_MAJ_PAC
     });
     it('should deny a pull request to an adobe repo', async () => {
-      let setup = createBranch(github, user, ADOBE_REPO, newBranch);
+      const setup = createBranch(github, user, ADOBE_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to adobe/${ADOBE_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'adobe',
         repo: ADOBE_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
       expect(suite.conclusion).not.toEqual('success');
-      let teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
+      const teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
       await teardown();
     });
     it('should deny a pull request to a magento repo', async () => {
-      let setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to magento/${PUBLIC_MAGENTO_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'magento',
         repo: PUBLIC_MAGENTO_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
       expect(suite.conclusion).not.toEqual('success');
-      let teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await teardown();
     });
   });
@@ -141,51 +141,51 @@ describe('github integration tests', () => {
       auth: process.env.TEST_FOUR_PAC
     });
     it('should approve a pull request to an adobe repo', async () => {
-      let setup = createBranch(github, user, ADOBE_REPO, newBranch);
+      const setup = createBranch(github, user, ADOBE_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to adobe/${ADOBE_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'adobe',
         repo: ADOBE_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
-      let teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
+      const teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
       await teardown();
     });
     it('should approve a pull request to a private magento repo', async () => {
-      let setup = createBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
+      const setup = createBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to magento/${PRIVATE_MAGENTO_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'magento',
         repo: PRIVATE_MAGENTO_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'magento', PRIVATE_MAGENTO_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'magento', PRIVATE_MAGENTO_REPO, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
-      let teardown = deleteBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
+      const teardown = deleteBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
       await teardown();
     });
     it('should approve a pull request to a public magento repo', async () => {
-      let setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to magento/${PUBLIC_MAGENTO_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'magento',
         repo: PUBLIC_MAGENTO_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
-      let teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await teardown();
     });
   });
@@ -196,35 +196,35 @@ describe('github integration tests', () => {
       auth: process.env.TEST_ONE_PAC
     });
     it('should approve a pull request to an adobe repo', async () => {
-      let setup = createBranch(github, user, ADOBE_REPO, newBranch);
+      const setup = createBranch(github, user, ADOBE_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to adobe/${ADOBE_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'adobe',
         repo: ADOBE_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
-      let teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
+      const teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
       await teardown();
     });
     it('should approve a pull request to a public magento repo', async () => {
-      let setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to magento/${PUBLIC_MAGENTO_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'magento',
         repo: PUBLIC_MAGENTO_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
-      let teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await teardown();
     });
   });
@@ -235,35 +235,35 @@ describe('github integration tests', () => {
       auth: process.env.TEST_TWO_PAC
     });
     it('should approve a pull request to an adobe repo', async () => {
-      let setup = createBranch(github, user, ADOBE_REPO, newBranch);
+      const setup = createBranch(github, user, ADOBE_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to adobe/${ADOBE_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'adobe',
         repo: ADOBE_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
-      let teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
+      const teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
       await teardown();
     });
     it('should approve a pull request to a public magento repo', async () => {
-      let setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to magento/${PUBLIC_MAGENTO_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'magento',
         repo: PUBLIC_MAGENTO_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
-      let teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await teardown();
     });
   });
@@ -274,35 +274,35 @@ describe('github integration tests', () => {
       auth: process.env.TEST_MAJ583_PAC
     });
     it('should deny a pull request to a public magento repo', async () => {
-      let setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to magento/${PUBLIC_MAGENTO_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'magento',
         repo: PUBLIC_MAGENTO_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
       expect(suite.conclusion).not.toEqual('success');
-      let teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
+      const teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await teardown();
     });
     it('should deny a pull request to a private magento repo', async () => {
-      let setup = createBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
+      const setup = createBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to magento/${PRIVATE_MAGENTO_REPO}...`);
-      let pr = await github.pulls.create({
+      const pr = await github.pulls.create({
         owner: 'magento',
         repo: PRIVATE_MAGENTO_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
         base: 'master'
       });
-      let suite = await waitForCheck(github, 'magento', PRIVATE_MAGENTO_REPO, pr.data.head.sha);
+      const suite = await waitForCheck(github, 'magento', PRIVATE_MAGENTO_REPO, pr.data.head.sha);
       expect(suite.conclusion).not.toEqual('success');
-      let teardown = deleteBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
+      const teardown = deleteBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
       await teardown();
     });
   });

@@ -162,7 +162,7 @@ async function check_cla (ow, args) {
   }
 
   // Next we look up signed agreements containing the author's github username in Adobe Sign
-  let options = {
+  const options = {
     method: 'GET',
     url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements',
     qs: {
@@ -181,7 +181,7 @@ async function check_cla (ow, args) {
   }
   if (response.userAgreementList && response.userAgreementList.length) {
     // We found agreements containing the github username to search through.
-    let agreements = response.userAgreementList.filter(function (agreement) {
+    const agreements = response.userAgreementList.filter(function (agreement) {
       return (agreement.status === 'SIGNED' && (agreement.name === 'Adobe Contributor License Agreement' || agreement.name === 'Adobe CLA'));
     }).map(function (agreement) {
       return agreement.agreementId;
@@ -203,7 +203,7 @@ async function check_cla (ow, args) {
     } catch (e) {
       return utils.action_error(e, 'Error invoking lookup action when agreements were found.');
     }
-    let usernames = lookup_res.body.usernames;
+    const usernames = lookup_res.body.usernames;
     if (usernames.map(function (item) { return item.toLowerCase(); }).includes(args.user.toLowerCase())) {
       // If the username exists in the response from the lookup action, then we
       // can render a green checkmark on the PR!
