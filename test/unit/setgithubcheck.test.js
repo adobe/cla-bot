@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const rewire = require('rewire');
-let setgithubcheck = rewire('../../setgithubcheck/setgithubcheck.js');
+const setgithubcheck = rewire('../../setgithubcheck/setgithubcheck.js');
 
 describe('setgithubcheck action', function () {
   let revert_github_app_mock, app_spy, github_api_stub; // stubbing github app / api calls
@@ -31,13 +31,13 @@ describe('setgithubcheck action', function () {
   });
   it('should fail if creating a check fails', async function () {
     github_api_stub.checks.create.and.returnValue(Promise.reject(new Error('boom!')));
-    let result = await setgithubcheck.main({});
+    const result = await setgithubcheck.main({});
     expect(result.statusCode).toEqual(500);
     expect(result.body.error.toString()).toContain('boom!');
   });
   it('should return title parameter if check passes', async function () {
     github_api_stub.checks.create.and.returnValue(Promise.resolve({}));
-    let result = await setgithubcheck.main({ title: 'batman' });
+    const result = await setgithubcheck.main({ title: 'batman' });
     expect(result.title).toBe('batman');
   });
 });

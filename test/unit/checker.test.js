@@ -11,14 +11,14 @@ governing permissions and limitations under the License.
 */
 
 const rewire = require('rewire');
-let checker = rewire('../../checker/checker.js');
+const checker = rewire('../../checker/checker.js');
 const utils = require('../../utils.js');
 
 describe('checker action', function () {
   describe('ignored events', function () {
     it('should return 202 if no pull_request property exists', async function () {
       const params = {};
-      let result = await checker.main(params);
+      const result = await checker.main(params);
       expect(result.statusCode).toBe(202);
       expect(result.body).toContain('Not a pull request');
     });
@@ -89,7 +89,7 @@ describe('checker action', function () {
         };
       });
       await Promise.all(params.map(async function (param) {
-        let result = await checker.main(param);
+        const result = await checker.main(param);
         expect(result.statusCode).toBe(200);
       }));
     });
@@ -107,7 +107,7 @@ describe('checker action', function () {
         installation: { id: '5431' }
       };
       openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-      let response = await checker.main(params);
+      const response = await checker.main(params);
       const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
       expect(action_invoke_args.name).toBe('cla-setgithubcheck');
       expect(action_invoke_args.params.status).toBe('completed');
@@ -132,7 +132,7 @@ describe('checker action', function () {
           status: 204
         }));
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.status).toBe('completed');
@@ -178,7 +178,7 @@ describe('checker action', function () {
             return Promise.resolve({});
           }
         });
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.status).toBe('completed');
@@ -224,7 +224,7 @@ describe('checker action', function () {
             return Promise.resolve({});
           }
         });
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.conclusion).toBe('action_required');
@@ -255,7 +255,7 @@ describe('checker action', function () {
           }
         });
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.conclusion).toBe('action_required');
@@ -281,7 +281,7 @@ describe('checker action', function () {
           status: 204
         }));
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.status).toBe('completed');
@@ -328,7 +328,7 @@ describe('checker action', function () {
             return Promise.resolve({});
           }
         });
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.status).toBe('completed');
@@ -375,7 +375,7 @@ describe('checker action', function () {
             return Promise.resolve({});
           }
         });
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.conclusion).toBe('action_required');
@@ -407,7 +407,7 @@ describe('checker action', function () {
           }
         });
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.conclusion).toBe('action_required');
@@ -439,7 +439,7 @@ describe('checker action', function () {
           status: 204
         }));
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.status).toBe('completed');
@@ -490,7 +490,7 @@ describe('checker action', function () {
             return Promise.resolve({});
           }
         });
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.status).toBe('completed');
@@ -541,7 +541,7 @@ describe('checker action', function () {
             return Promise.resolve({});
           }
         });
-        let response = await checker.main(params);
+        const response = await checker.main(params);
         const action_invoke_args = openwhisk_stub.actions.invoke.calls.mostRecent().args[0];
         expect(action_invoke_args.name).toBe('cla-setgithubcheck');
         expect(action_invoke_args.params.conclusion).toBe('action_required');
