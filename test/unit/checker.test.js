@@ -163,7 +163,7 @@ describe('checker action', function () {
               agreementId: '123'
             }] });
           } else {
-            return Promise.resolve({ 'access_token': 'yes' });
+            return Promise.resolve({ access_token: 'yes' });
           }
         });
         openwhisk_stub.actions.invoke.and.callFake(function (params) {
@@ -209,7 +209,7 @@ describe('checker action', function () {
               agreementId: '123'
             }] });
           } else {
-            return Promise.resolve({ 'access_token': 'yes' });
+            return Promise.resolve({ access_token: 'yes' });
           }
         });
         openwhisk_stub.actions.invoke.and.callFake(function (params) {
@@ -251,7 +251,7 @@ describe('checker action', function () {
           if (options.url.includes('agreements')) {
             return Promise.resolve({ userAgreementList: [] });
           } else {
-            return Promise.resolve({ 'access_token': 'yes' });
+            return Promise.resolve({ access_token: 'yes' });
           }
         });
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
@@ -313,7 +313,7 @@ describe('checker action', function () {
               agreementId: '123'
             }] });
           } else {
-            return Promise.resolve({ 'access_token': 'yes' });
+            return Promise.resolve({ access_token: 'yes' });
           }
         });
         openwhisk_stub.actions.invoke.and.callFake(function (params) {
@@ -360,7 +360,7 @@ describe('checker action', function () {
               agreementId: '123'
             }] });
           } else {
-            return Promise.resolve({ 'access_token': 'yes' });
+            return Promise.resolve({ access_token: 'yes' });
           }
         });
         openwhisk_stub.actions.invoke.and.callFake(function (params) {
@@ -403,7 +403,7 @@ describe('checker action', function () {
           if (options.url.includes('agreements')) {
             return Promise.resolve({ userAgreementList: [] });
           } else {
-            return Promise.resolve({ 'access_token': 'yes' });
+            return Promise.resolve({ access_token: 'yes' });
           }
         });
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
@@ -475,7 +475,7 @@ describe('checker action', function () {
               agreementId: '123'
             }] });
           } else {
-            return Promise.resolve({ 'access_token': 'yes' });
+            return Promise.resolve({ access_token: 'yes' });
           }
         });
         openwhisk_stub.actions.invoke.and.callFake(function (params) {
@@ -526,7 +526,7 @@ describe('checker action', function () {
               agreementId: '123'
             }] });
           } else {
-            return Promise.resolve({ 'access_token': 'yes' });
+            return Promise.resolve({ access_token: 'yes' });
           }
         });
         openwhisk_stub.actions.invoke.and.callFake(function (params) {
