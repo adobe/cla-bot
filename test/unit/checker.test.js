@@ -78,10 +78,12 @@ describe('checker action', function () {
         return {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'adobe' },
-              name: 'photoshop'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'adobe' },
+                name: 'photoshop'
+              }
+            },
             head: { sha: '12345' }
           },
           action: event,
@@ -97,10 +99,12 @@ describe('checker action', function () {
       const params = {
         pull_request: {
           user: { login: 'greenkeeper', type: 'Bot' },
-          base: { repo: {
-            owner: { login: 'adobe' },
-            name: 'photoshop'
-          } },
+          base: {
+            repo: {
+              owner: { login: 'adobe' },
+              name: 'photoshop'
+            }
+          },
           head: { sha: '12345' }
         },
         action: 'opened',
@@ -119,10 +123,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'magento' },
-              name: 'magento2'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'magento' },
+                name: 'magento2'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -143,10 +149,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'magento' },
-              name: 'magento2'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'magento' },
+                name: 'magento2'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -157,11 +165,13 @@ describe('checker action', function () {
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
-            return Promise.resolve({ userAgreementList: [{
-              status: 'SIGNED',
-              name: 'Adobe CLA',
-              agreementId: '123'
-            }] });
+            return Promise.resolve({
+              userAgreementList: [{
+                status: 'SIGNED',
+                name: 'Adobe CLA',
+                agreementId: '123'
+              }]
+            });
           } else {
             return Promise.resolve({ access_token: 'yes' });
           }
@@ -189,10 +199,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'magento' },
-              name: 'magento2'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'magento' },
+                name: 'magento2'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -203,11 +215,13 @@ describe('checker action', function () {
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
-            return Promise.resolve({ userAgreementList: [{
-              status: 'SIGNED',
-              name: 'Adobe CLA',
-              agreementId: '123'
-            }] });
+            return Promise.resolve({
+              userAgreementList: [{
+                status: 'SIGNED',
+                name: 'Adobe CLA',
+                agreementId: '123'
+              }]
+            });
           } else {
             return Promise.resolve({ access_token: 'yes' });
           }
@@ -235,10 +249,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'magento' },
-              name: 'magento2'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'magento' },
+                name: 'magento2'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -268,10 +284,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'adobe' },
-              name: 'photoshop'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'adobe' },
+                name: 'photoshop'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -292,10 +310,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'adobe' },
-              name: 'photoshop'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'adobe' },
+                name: 'photoshop'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -307,11 +327,13 @@ describe('checker action', function () {
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
-            return Promise.resolve({ userAgreementList: [{
-              status: 'SIGNED',
-              name: 'Adobe CLA',
-              agreementId: '123'
-            }] });
+            return Promise.resolve({
+              userAgreementList: [{
+                status: 'SIGNED',
+                name: 'Adobe CLA',
+                agreementId: '123'
+              }]
+            });
           } else {
             return Promise.resolve({ access_token: 'yes' });
           }
@@ -339,10 +361,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'adobe' },
-              name: 'photoshop'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'adobe' },
+                name: 'photoshop'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -354,11 +378,13 @@ describe('checker action', function () {
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
-            return Promise.resolve({ userAgreementList: [{
-              status: 'SIGNED',
-              name: 'Adobe CLA',
-              agreementId: '123'
-            }] });
+            return Promise.resolve({
+              userAgreementList: [{
+                status: 'SIGNED',
+                name: 'Adobe CLA',
+                agreementId: '123'
+              }]
+            });
           } else {
             return Promise.resolve({ access_token: 'yes' });
           }
@@ -386,10 +412,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'adobe' },
-              name: 'photoshop'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'adobe' },
+                name: 'photoshop'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -420,10 +448,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'adobedocs' },
-              name: 'photoshop'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'adobedocs' },
+                name: 'photoshop'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -450,10 +480,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'adobedocs' },
-              name: 'photoshop'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'adobedocs' },
+                name: 'photoshop'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -469,11 +501,13 @@ describe('checker action', function () {
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
-            return Promise.resolve({ userAgreementList: [{
-              status: 'SIGNED',
-              name: 'Adobe CLA',
-              agreementId: '123'
-            }] });
+            return Promise.resolve({
+              userAgreementList: [{
+                status: 'SIGNED',
+                name: 'Adobe CLA',
+                agreementId: '123'
+              }]
+            });
           } else {
             return Promise.resolve({ access_token: 'yes' });
           }
@@ -501,10 +535,12 @@ describe('checker action', function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
-            base: { repo: {
-              owner: { login: 'adobedocs' },
-              name: 'photoshop'
-            } },
+            base: {
+              repo: {
+                owner: { login: 'adobedocs' },
+                name: 'photoshop'
+              }
+            },
             head: { sha: '12345' }
           },
           action: 'opened',
@@ -520,11 +556,13 @@ describe('checker action', function () {
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
-            return Promise.resolve({ userAgreementList: [{
-              status: 'SIGNED',
-              name: 'Adobe CLA',
-              agreementId: '123'
-            }] });
+            return Promise.resolve({
+              userAgreementList: [{
+                status: 'SIGNED',
+                name: 'Adobe CLA',
+                agreementId: '123'
+              }]
+            });
           } else {
             return Promise.resolve({ access_token: 'yes' });
           }
