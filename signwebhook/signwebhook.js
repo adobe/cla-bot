@@ -55,7 +55,7 @@ async function main (params) {
     if ((params.event !== 'AGREEMENT_WORKFLOW_COMPLETED' && params.event !== 'AGREEMENT_ACTION_COMPLETED') || !params.agreement || !params.agreement.id || !params.agreement.name || params.agreement.name !== 'Adobe CLA') {
     // If the needed parameters are not a part of this invocation, ignore.
       return {
-        statusCode: 400,
+        statusCode: 200,
         headers,
         body: `Insufficient parameters for processing, aborting. Params: ${JSON.stringify(params)}`
       };
@@ -158,10 +158,11 @@ async function main (params) {
         }));
       }
     }));
+    let status_text = (completed.length ? `PRs set for ${usernames.join(', ')} completed: ${completed.join('\n')}` : `No PRs found for ${usernames.join(',')}`);
     return {
       statusCode: 201,
       headers,
-      body: errors.length ? errors.join('\n') : `Completed without failure: ${completed.join('\n')}`
+      body: errors.length ? errors.join('\n') : status_text
     };
   } catch (e) {
     return {
