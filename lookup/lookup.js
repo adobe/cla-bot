@@ -61,12 +61,24 @@ async function main (params) {
 
 async function lookup (args) {
   const agreements = args.agreements;
-  let usernames = [];
-  await Promise.all(agreements.map(async function (agreement) {
-    const agreementUsers = await lookupSingleAgreement(args, agreement);
-    usernames = Array.from(new Set(usernames.concat(agreementUsers)));
-  }));
-  return usernames;
+  const username = args.username;
+  const promises = agreements.map(async function (agreement) {
+    return await lookupSingleAgreement(args, agreement);
+  });
+
+  // A new Promise that resolves to either
+  // 1. Username from the first Sign API call that includes the username
+  // 2. Empty array if none of the Sign API calls includes the username
+  // Promise is rejected if any of the Sign API calls fail before resolution
+  return Promise.new((resolve, reject) => {
+    Promise.all(promises.map(promise => {
+      return promise.then(agreementUsers => {
+        if (agreementUsers.includes(username)) {
+          resolve(username);
+        }
+      });
+    })).then(_results => resolve([])).catch(error => reject(error))
+  });
 }
 
 async function lookupSingleAgreement (args, agreement) {
