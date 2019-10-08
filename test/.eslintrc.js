@@ -10,6 +10,7 @@ module.exports = {
     'semi': [2, 'always'],
     'no-extra-semi': 2,
     'camelcase': 'off',
-    'prefer-promise-reject-errors': 'off'
+    'prefer-promise-reject-errors': 'off',
+    'quotes': ['error', 'single', { allowTemplateLiterals: true }]
   }
 };
