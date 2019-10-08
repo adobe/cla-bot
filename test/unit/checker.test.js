@@ -195,7 +195,7 @@ describe('checker action', function () {
         expect(action_invoke_args.params.title).toContain('CLA Signed');
         expect(response.statusCode).toBe(200);
       });
-      it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of the magento org and no agreements are found containing the user\'s github username', async function () {
+      it(`should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of the magento org and no agreements are found containing the user's github username`, async function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
@@ -357,7 +357,7 @@ describe('checker action', function () {
         expect(action_invoke_args.params.title).toContain('CLA Signed');
         expect(response.statusCode).toBe(200);
       });
-      it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of the adobe org and no agreements are found containing the user\'s github username', async function () {
+      it(`should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of the adobe org and no agreements are found containing the user's github username`, async function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },
@@ -531,7 +531,7 @@ describe('checker action', function () {
         expect(action_invoke_args.params.title).toContain('CLA Signed');
         expect(response.statusCode).toBe(200);
       });
-      it('should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org the PR was issued on, not a public member of github.com/adobe and no agreements are found containing the user\'s github username', async function () {
+      it(`should invoke the setgithubcheck action with a conclusion of action_required if user is not a member of org the PR was issued on, not a public member of github.com/adobe and no agreements are found containing the user's github username`, async function () {
         const params = {
           pull_request: {
             user: { login: 'hiren' },

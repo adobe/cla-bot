@@ -284,7 +284,7 @@ async function set_green_is_adobe_employee (ow, args, membership_org) {
   let reason = `membership in github.com/${membership_org}`;
   if (membership_org === 'magento') {
     company += ' (Magento)';
-    reason = 'membership in github.com/magento\'s employees team';
+    reason = `membership in github.com/magento's employees team`;
   }
   let result;
   try {
