@@ -63,7 +63,7 @@ async function main (params) {
 
 function lookup (args) {
   const agreements = args.agreements;
-  const username = args.username;
+  const username = args.username.toLowerCase();
   const promiseMatrix = agreements.map(agreement => lookupSingleAgreement(args, agreement));
   const [responsePromises, usernamesPromises] = transpose(promiseMatrix);
 
@@ -75,7 +75,7 @@ function lookup (args) {
   return new Promise((resolve, reject) => {
     Promise.all(usernamesPromises.map(promise => {
       return promise.then(agreementUsers => {
-        if (agreementUsers.includes(username)) {
+        if (agreementUsers.map(u => u.toLowerCase()).includes(username)) {
           resolve([username]);
           responsePromises.forEach(p => p.abort());
         }
