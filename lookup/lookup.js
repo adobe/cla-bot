@@ -14,6 +14,7 @@ const request = require('request-promise-native');
 const parse = require('util').promisify(require('csv-parse'));
 const utils = require('../utils.js');
 const config = utils.get_config();
+const transpose = m => m[0].map((x, i) => m.map(x => x[i]));
 
 async function main (params) {
   let agreements = [];
@@ -62,26 +63,27 @@ async function main (params) {
 async function lookup (args) {
   const agreements = args.agreements;
   const username = args.username;
-  const promises = agreements.map(async function (agreement) {
-    return await lookupSingleAgreement(args, agreement);
-  });
+  const promiseMatrix = agreements.map(agreement => lookupSingleAgreement(agreement));
+  const [requestPromises, usernamesPromises] = transpose(promiseMatrix);
 
   // A new Promise that resolves to either
   // 1. Username from the first Sign API call that includes the username
   // 2. Empty array if none of the Sign API calls includes the username
   // Promise is rejected if any of the Sign API calls fail before resolution
-  return Promise.new((resolve, reject) => {
-    Promise.all(promises.map(promise => {
+  // If the username is found, all requests are aborted (doesn't matter if we abort a completed request)
+  return Promise.new(function (resolve, reject) {
+    Promise.all(usernamesPromises.map(promise => {
       return promise.then(agreementUsers => {
         if (agreementUsers.includes(username)) {
           resolve(username);
+          requestPromises.forEach(p => p.abort());
         }
       });
-    })).then(_results => resolve([])).catch(error => reject(error))
+    })).then(_results => resolve([]), error => reject(error));
   });
 }
 
-async function lookupSingleAgreement (args, agreement) {
+function lookupSingleAgreement (args, agreement) {
   const options = {
     method: 'GET',
     url: `https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`,
@@ -90,11 +92,23 @@ async function lookupSingleAgreement (args, agreement) {
       Authorization: 'Bearer ' + args.access_token
     }
   };
-  const response = await request(options);
-  // Logic to parse CSV and get the value for Custom Field 8 or Custom Field 1 or githubUsername
-  const records = await parse(response.trim(), { columns: true });
+  // This isn't just a Promise, it's actually a Request object that is also a Promise.
+  const responsePromise = request(options);
+  const usernamesPromise = responsePromise
+    .then(function (response) {
+      return parse(response.trim(), { columns: true });
+    })
+    .then(function (records) {
+      return extractUsernames(records);
+    });
+
+  return [responsePromise, usernamesPromise];
+}
+
+function extractUsernames (agreementRows) {
+  // Logic to get value of Custom Field 8 or Custom Field 1 or githubUsername from the parsed CSV
   let usernames = [];
-  const data = records[0];
+  const data = agreementRows[0];
   if (data['Custom Field 8'] !== undefined && data['Custom Field 8'].trim() !== '') {
     // CCLA; form fields are a text area that accept multiple employee
     // usernames
