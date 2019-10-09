@@ -28,19 +28,19 @@ const OUR_ORGS = Object.keys(INSTALLATION_IDS);
 
 async function main (params) {
   try {
-    let headers = {
+    const headers = {
       'Content-Type': 'application/json'
     };
-    if (params && params['__ow_headers'] && (params['__ow_headers']['X-AdobeSign-ClientId'] || params['__ow_headers']['X-ADOBESIGN-CLIENTID'] || params['__ow_headers']['x-adobesign-clientid'])) {
+    if (params && params.__ow_headers && (params.__ow_headers['X-AdobeSign-ClientId'] || params.__ow_headers['X-ADOBESIGN-CLIENTID'] || params.__ow_headers['x-adobesign-clientid'])) {
     // This `if` block is the "Verification of intent" from Adobe Sign: https://helpx.adobe.com/sign/using/adobe-sign-webhooks-api.html#VoI
-      let client_id = params['__ow_headers']['X-AdobeSign-ClientId'] || params['__ow_headers']['X-ADOBESIGN-CLIENTID'] || params['__ow_headers']['x-adobesign-clientid'];
+      const client_id = params.__ow_headers['X-AdobeSign-ClientId'] || params.__ow_headers['X-ADOBESIGN-CLIENTID'] || params.__ow_headers['x-adobesign-clientid'];
       if (client_id === config.signClientID) {
       // We are responding to a request from a webhook created by us;
       // Make sure we echo the client id back in the header to ensure Adobe Sign
       // doesn't blacklist us.
         headers['X-AdobeSign-ClientId'] = client_id;
       }
-      if (params['__ow_method'] === 'get') {
+      if (params.__ow_method === 'get') {
       // Adobe Sign sends a GET request when we initially register the webhook
       // It normally POSTs notifications of webhook events
       // in the GET case, simply echo back with the client id header to complete
@@ -79,7 +79,7 @@ async function main (params) {
         body: `Error invoking lookup action when agreements were found: ${e}`
       };
     }
-    let usernames = lookup_res.body.usernames;
+    const usernames = lookup_res.body.usernames;
     if (!usernames) {
       return {
         statusCode: 500,
@@ -87,17 +87,17 @@ async function main (params) {
         body: `No usernames were returned from lookup action; maybe an error with lookup action`
       };
     }
-    let user_query = usernames.map(u => `author:${u}`).join(' ');
+    const user_query = usernames.map(u => `author:${u}`).join(' ');
     const app = github_app({
       id: config.githubAppId,
       cert: config.githubKey
     });
-    let errors = [];
-    let completed = [];
+    const errors = [];
+    const completed = [];
     // for each of our orgs:
     await Promise.all(OUR_ORGS.map(async (org) => {
     // 1. get a github client for each org
-      let installation_id = INSTALLATION_IDS[org];
+      const installation_id = INSTALLATION_IDS[org];
       let github;
       try {
         github = await app.asInstallation(installation_id);
@@ -121,8 +121,8 @@ async function main (params) {
       // head SHA of the PR over to the setgithubcheck action, which will render
       // the green checkmark on the PR!
         await Promise.all(search_results.data.items.map(async (pr) => {
-          let repo_url = pr.repository_url.split('/');
-          let repo = repo_url[repo_url.length - 1];
+          const repo_url = pr.repository_url.split('/');
+          const repo = repo_url[repo_url.length - 1];
           let pr_data;
           try {
             pr_data = await github.pullRequests.get({
@@ -134,7 +134,7 @@ async function main (params) {
             errors.push(`Error retrieving pull request for ${org}/${repo}#${pr.number}: ${e}`);
             return;
           }
-          let sha = pr_data.data.head.sha;
+          const sha = pr_data.data.head.sha;
           try {
             await ow.actions.invoke({
               name: utils.SETGITHUBCHECK,
@@ -158,7 +158,7 @@ async function main (params) {
         }));
       }
     }));
-    let status_text = (completed.length ? `PRs set for ${usernames.join(', ')} completed: ${completed.join('\n')}` : `No PRs found for ${usernames.join(',')}`);
+    const status_text = (completed.length ? `PRs set for ${usernames.join(', ')} completed: ${completed.join('\n')}` : `No PRs found for ${usernames.join(',')}`);
     return {
       statusCode: 201,
       headers,
