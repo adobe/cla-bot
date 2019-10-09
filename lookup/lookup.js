@@ -79,7 +79,6 @@ function lookup (args) {
           resolve([username]);
           responsePromises.forEach(p => p.abort());
         }
-        return Promise.resolve(null);
       });
     })).then(_results => resolve([]), error => reject(error));
   });
