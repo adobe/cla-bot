@@ -65,19 +65,19 @@ function lookup (args) {
   const agreements = args.agreements;
   const username = args.username;
   const promiseMatrix = agreements.map(agreement => lookupSingleAgreement(args, agreement));
-  const [requestPromises, usernamesPromises] = transpose(promiseMatrix);
+  const [responsePromises, usernamesPromises] = transpose(promiseMatrix);
 
   // A new Promise that resolves to either
   // 1. Username from the first Sign API call that includes the username
   // 2. Empty array if none of the Sign API calls includes the username
   // Promise is rejected if any of the Sign API calls fail before resolution
-  // If the username is found, all requests are aborted (doesn't matter if we abort a completed request)
+  // If the username is found, all requests are aborted (it's okay to abort completed requests)
   return new Promise((resolve, reject) => {
     Promise.all(usernamesPromises.map(promise => {
       return promise.then(agreementUsers => {
         if (agreementUsers.includes(username)) {
           resolve([username]);
-          requestPromises.forEach(p => p.abort());
+          responsePromises.forEach(p => p.abort());
         }
         return Promise.resolve(null);
       });
