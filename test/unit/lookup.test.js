@@ -27,6 +27,7 @@ describe('lookup action', function () {
     let revert_access_token_mock;
     beforeEach(function () {
       revert_access_token_mock = spyOn(utils, 'get_adobe_sign_access_token').and.returnValue(Promise.resolve({ access_token: 'gimme ze access codes!' }));
+      // TODO: fix spy to implement .abort()
       request_spy = jasmine.createSpy('request spy').and.callFake(function (options) {
         if (options.url.includes('oauth/refresh')) {
           return Promise.resolve({ access_token: 'yes' });
