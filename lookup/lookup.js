@@ -48,6 +48,7 @@ async function main (params) {
     usernames = await lookup({
       agreements: agreements,
       access_token: access_token,
+      username: params.username,
       apiVersion
     });
   } catch (e) {
@@ -60,10 +61,10 @@ async function main (params) {
   };
 }
 
-async function lookup (args) {
+function lookup (args) {
   const agreements = args.agreements;
   const username = args.username;
-  const promiseMatrix = agreements.map(agreement => lookupSingleAgreement(agreement));
+  const promiseMatrix = agreements.map(agreement => lookupSingleAgreement(args, agreement));
   const [requestPromises, usernamesPromises] = transpose(promiseMatrix);
 
   // A new Promise that resolves to either
@@ -71,13 +72,14 @@ async function lookup (args) {
   // 2. Empty array if none of the Sign API calls includes the username
   // Promise is rejected if any of the Sign API calls fail before resolution
   // If the username is found, all requests are aborted (doesn't matter if we abort a completed request)
-  return Promise.new(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     Promise.all(usernamesPromises.map(promise => {
       return promise.then(agreementUsers => {
         if (agreementUsers.includes(username)) {
-          resolve(username);
+          resolve([username]);
           requestPromises.forEach(p => p.abort());
         }
+        return Promise.resolve(null);
       });
     })).then(_results => resolve([]), error => reject(error));
   });
@@ -92,14 +94,14 @@ function lookupSingleAgreement (args, agreement) {
       Authorization: 'Bearer ' + args.access_token
     }
   };
-  // This isn't just a Promise, it's actually a Request object that is also a Promise.
+  // This isn't an ordinary Promise, it's actually a Request object that is also a Promise.
   const responsePromise = request(options);
   const usernamesPromise = responsePromise
     .then(function (response) {
       return parse(response.trim(), { columns: true });
     })
     .then(function (records) {
-      return extractUsernames(records);
+      return Promise.resolve(extractUsernames(records));
     });
 
   return [responsePromise, usernamesPromise];

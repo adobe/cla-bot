@@ -46,20 +46,23 @@ describe('lookup action', function () {
     });
     it('should be able to handle a single agreement', async function () {
       const params = {
-        agreements: '12345'
+        agreements: '12345',
+        username: 'steve'
       };
       const result = await lookup.main(params);
-      expect(result.body.usernames).toContain('steve');
+      expect(result.body.usernames).toEqual(['steve']);
     });
     it('should be able to handle multiple agreements', async function () {
+      let count = 1;
       parse_spy.and.callFake(function () {
-        return Promise.resolve([{ githubUsername: 'steve' + Math.random() }]);
+        return Promise.resolve([{ githubUsername: 'steve' + count++ }]);
       });
       const params = {
-        agreements: ['12345', '43561']
+        agreements: ['12345', '43561'],
+        username: 'steve1'
       };
       const result = await lookup.main(params);
-      expect(result.body.usernames.length).toBe(2);
+      expect(result.body.usernames).toEqual(['steve1']);
     });
   });
 });
