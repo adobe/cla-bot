@@ -36,7 +36,10 @@ describe('lookup action', function () {
         }
       });
       revert_request_mock = lookup.__set__('request', request_spy);
-      parse_spy = jasmine.createSpy('parse spy').and.returnValue(Promise.resolve([{ githubUsername: 'steve' }]));
+      let count = 1;
+      parse_spy = jasmine.createSpy('parse spy').and.callFake(function () {
+        return Promise.resolve([{ githubUsername: 'steve' + count++ }]);
+      });
       revert_parse_mock = lookup.__set__('parse', parse_spy);
     });
     afterEach(function () {
@@ -47,22 +50,34 @@ describe('lookup action', function () {
     it('should be able to handle a single agreement', async function () {
       const params = {
         agreements: '12345',
-        username: 'steve'
+        username: 'steve1'
       };
       let result = await lookup.main(params);
-      expect(result.body.usernames).toEqual(['steve']);
+      expect(result.body.usernames).toEqual(['steve1']);
     });
-    it('should be able to handle multiple agreements', async function () {
-      let count = 1;
-      parse_spy.and.callFake(function () {
-        return Promise.resolve([{ githubUsername: 'steve' + count++ }]);
-      });
+    it('should be able to handle multiple agreements when the first one matches', async function () {
       const params = {
         agreements: ['12345', '43561'],
         username: 'steve1'
       };
       let result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve1']);
+    });
+    it('should be able to handle multiple agreements when the last one matches', async function () {
+      const params = {
+        agreements: ['12345', '99453'],
+        username: 'steve2'
+      };
+      let result = await lookup.main(params);
+      expect(result.body.usernames).toEqual(['steve2']);
+    });
+    it('should be able to handle multiple agreements when none match', async function () {
+      const params = {
+        agreements: ['12345', '99453'],
+        username: 'bob'
+      };
+      let result = await lookup.main(params);
+      expect(result.body.usernames).toEqual([]);
     });
   });
 });
