@@ -85,7 +85,6 @@ function lookup (args) {
 }
 
 function lookupAndParseAgreement (args, agreement) {
-  // This isn't an ordinary Promise, it's actually a Request object that is also a Promise.
   const responsePromise = lookupAgreement(args, agreement);
   const usernamesPromise = responsePromise
     .then(function (response) {
@@ -95,6 +94,9 @@ function lookupAndParseAgreement (args, agreement) {
       return Promise.resolve(extractUsernames(records));
     });
 
+  // We only need the result of usernamesPromise, however
+  // we need to hold on to responsePromise in order to abort the HTTP request
+  // as it is both an {http.ClientRequest} and a {Promise<http.IncomingMessage>}
   return [responsePromise, usernamesPromise];
 }
 
