@@ -25,16 +25,15 @@ describe('lookup action', function () {
     let revert_lookup_agreement_mock, lookup_agreement_spy;
     let revert_parse_mock, parse_spy; // stubbing csv-parse module
     let revert_access_token_mock;
-    let response_mocks = [];
+    let response_mock;
     beforeEach(function () {
       revert_access_token_mock = spyOn(utils, 'get_adobe_sign_access_token').and.returnValue(Promise.resolve({ access_token: 'gimme ze access codes!' }));
-      lookup_agreement_spy = jasmine.createSpy('lookup agreement spy').and.callFake(function (_args, _agreements) {
-        const response_mock = Promise.resolve('this string is ignored, but the promise will be used');
-        response_mock.abort = jasmine.createSpy('abort spy');
-        response_mocks.push(response_mock);
-        return response_mock;
-      });
+
+      response_mock = Promise.resolve('this string is ignored, but the promise will be used');
+      response_mock.abort = jasmine.createSpy('abort spy');
+      lookup_agreement_spy = jasmine.createSpy('lookup agreement spy').and.returnValue(response_mock);
       revert_lookup_agreement_mock = lookup.__set__('lookupAgreement', lookup_agreement_spy);
+
       let count = 1;
       parse_spy = jasmine.createSpy('parse spy').and.callFake(function () {
         return Promise.resolve([{ githubUsername: 'steve' + count++ }]);
@@ -45,7 +44,6 @@ describe('lookup action', function () {
       revert_lookup_agreement_mock();
       revert_access_token_mock();
       revert_parse_mock();
-      response_mocks = [];
     });
     it('should be able to handle a single agreement', async function () {
       const params = {
@@ -54,7 +52,7 @@ describe('lookup action', function () {
       };
       const result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve1']);
-      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalledTimes(1));
+      expect(response_mock.abort).toHaveBeenCalledTimes(1);
     });
     it('should be able to handle multiple agreements when the first one matches', async function () {
       const params = {
@@ -63,7 +61,7 @@ describe('lookup action', function () {
       };
       const result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve1']);
-      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalledTimes(1));
+      expect(response_mock.abort).toHaveBeenCalledTimes(2);
     });
     it('should be able to handle multiple agreements when the last one matches', async function () {
       const params = {
@@ -72,7 +70,7 @@ describe('lookup action', function () {
       };
       let result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve2']);
-      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalledTimes(1));
+      expect(response_mock.abort).toHaveBeenCalledTimes(2);
     });
     it('should be able to handle multiple agreements when none match', async function () {
       const params = {
@@ -81,7 +79,7 @@ describe('lookup action', function () {
       };
       let result = await lookup.main(params);
       expect(result.body.usernames).toEqual([]);
-      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalledTimes(0));
+      expect(response_mock.abort).toHaveBeenCalledTimes(0);
     });
   });
 });
