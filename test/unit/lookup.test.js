@@ -63,14 +63,18 @@ describe('lookup action', function () {
       expect(result.body.usernames).toEqual(['steve1']);
       expect(response_mock.abort).toHaveBeenCalledTimes(2);
     });
-    it('should be able to handle multiple agreements when the last one matches', async function () {
+    it('should be able to handle multiple agreements when all match', async function () {
+      parse_spy.and.returnValue(Promise.resolve([{ githubUsername: 'steve' }]));
       const params = {
         agreements: ['12345', '99453'],
-        username: 'steve2'
+        username: 'steve'
       };
       let result = await lookup.main(params);
-      expect(result.body.usernames).toEqual(['steve2']);
-      expect(response_mock.abort).toHaveBeenCalledTimes(2);
+      expect(result.body.usernames).toEqual(['steve']);
+      // Every matching agreement aborts all requests, so 2 * 2 = 4
+      // This happens because our abort mock doesn't do anything
+      // In real code, the abort will prevent multiple usernamePromises from resolving
+      expect(response_mock.abort).toHaveBeenCalledTimes(4);
     });
     it('should be able to handle multiple agreements when none match', async function () {
       const params = {
