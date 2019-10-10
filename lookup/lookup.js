@@ -64,7 +64,7 @@ async function main (params) {
 function lookup (args) {
   const agreements = args.agreements;
   const username = args.username.toLowerCase();
-  const promiseMatrix = agreements.map(agreement => lookupSingleAgreement(args, agreement));
+  const promiseMatrix = agreements.map(agreement => lookupAndParseAgreement(args, agreement));
   const [responsePromises, usernamesPromises] = transpose(promiseMatrix);
 
   // A new Promise that resolves to either
@@ -84,17 +84,9 @@ function lookup (args) {
   });
 }
 
-function lookupSingleAgreement (args, agreement) {
-  const options = {
-    method: 'GET',
-    url: `https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`,
-    headers: {
-      'cache-control': 'no-cache',
-      Authorization: 'Bearer ' + args.access_token
-    }
-  };
+function lookupAndParseAgreement (args, agreement) {
   // This isn't an ordinary Promise, it's actually a Request object that is also a Promise.
-  const responsePromise = request(options);
+  const responsePromise = lookupAgreement(args, agreement);
   const usernamesPromise = responsePromise
     .then(function (response) {
       return parse(response.trim(), { columns: true });
@@ -104,6 +96,18 @@ function lookupSingleAgreement (args, agreement) {
     });
 
   return [responsePromise, usernamesPromise];
+}
+
+function lookupAgreement (args, agreement) {
+  const options = {
+    method: 'GET',
+    url: `https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`,
+    headers: {
+      'cache-control': 'no-cache',
+      Authorization: 'Bearer ' + args.access_token
+    }
+  };
+  return request(options);
 }
 
 function extractUsernames (agreementRows) {
