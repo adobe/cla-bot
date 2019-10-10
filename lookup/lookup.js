@@ -25,7 +25,7 @@ async function main (params) {
   } else if (params.agreements) {
     agreements.push(params.agreements);
   } else {
-    return { error: "param 'agreements' not found in request" };
+    return { error: `param 'agreements' not found in request` };
   }
   let apiVersion = 'v5';
   if (params.apiVersion) {

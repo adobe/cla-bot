@@ -29,7 +29,7 @@ async function main (params) {
   } catch (e) {
     return utils.action_error(e, 'Error retrieving GitHub API instance on behalf of app installation.');
   }
-  let options = {
+  const options = {
     owner: params.org,
     repo: params.repo,
     name: 'Adobe CLA Signed?',

@@ -11,19 +11,19 @@ governing permissions and limitations under the License.
 */
 
 const fetch = require('node-fetch');
-const BASE = `https://adobeioruntime.net/api/v1/web/io-solutions/default`;
+const BASE = 'https://adobeioruntime.net/api/v1/web/io-solutions/default';
 
 describe('HTTP integration tests', () => {
   describe('checker', () => {
     const URL = `${BASE}/cla-checker-stage`;
     it('should respond with a 202 and body should say ignoring when not a PR event', async () => {
-      let res = await fetch(URL, {
+      const res = await fetch(URL, {
         method: 'post',
         body: JSON.stringify({}),
         headers: { 'Content-Type': 'application/json' }
       });
       expect(res.status).toBe(202);
-      let text = await res.text();
+      const text = await res.text();
       expect(text).toContain('ignoring');
     });
   });

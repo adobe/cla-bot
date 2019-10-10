@@ -12,12 +12,12 @@ governing permissions and limitations under the License.
 
 const utils = require('../../utils.js');
 const rewire = require('rewire');
-let lookup = rewire('../../lookup/lookup.js');
+const lookup = rewire('../../lookup/lookup.js');
 
 describe('lookup action', function () {
   describe('failure', function () {
     it('should reject if parameters do not contain agreements', async function () {
-      let result = await lookup.main({});
+      const result = await lookup.main({});
       expect(result.error).toContain('not found');
     });
   });
