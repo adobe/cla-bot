@@ -25,14 +25,15 @@ describe('lookup action', function () {
     let revert_request_mock, request_spy; // stubbing request module
     let revert_parse_mock, parse_spy; // stubbing csv-parse module
     let revert_access_token_mock;
+    let response_mocks = [];
     beforeEach(function () {
       revert_access_token_mock = spyOn(utils, 'get_adobe_sign_access_token').and.returnValue(Promise.resolve({ access_token: 'gimme ze access codes!' }));
-      // TODO: fix spy to implement .abort() and assert that it's called
       request_spy = jasmine.createSpy('request spy').and.callFake(function (options) {
-        if (options.url.includes('oauth/refresh')) {
-          return Promise.resolve({ access_token: 'yes' });
-        } else {
-          return Promise.resolve('this will not be used');
+        if (options.url.includes('/agreements')) {
+          const response_mock = Promise.resolve("this won't be used, but the promise will be");
+          response_mock.abort = jasmine.createSpy('abort spy');
+          response_mocks.push(response_mock);
+          return response_mock;
         }
       });
       revert_request_mock = lookup.__set__('request', request_spy);
@@ -46,6 +47,7 @@ describe('lookup action', function () {
       revert_access_token_mock();
       revert_request_mock();
       revert_parse_mock();
+      response_mocks = [];
     });
     it('should be able to handle a single agreement', async function () {
       const params = {
@@ -54,6 +56,8 @@ describe('lookup action', function () {
       };
       let result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve1']);
+
+      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalled());
     });
     it('should be able to handle multiple agreements when the first one matches', async function () {
       const params = {
@@ -62,6 +66,7 @@ describe('lookup action', function () {
       };
       let result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve1']);
+      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalled());
     });
     it('should be able to handle multiple agreements when the last one matches', async function () {
       const params = {
@@ -70,6 +75,7 @@ describe('lookup action', function () {
       };
       let result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve2']);
+      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalled());
     });
     it('should be able to handle multiple agreements when none match', async function () {
       const params = {
@@ -78,6 +84,7 @@ describe('lookup action', function () {
       };
       let result = await lookup.main(params);
       expect(result.body.usernames).toEqual([]);
+      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalledTimes(0));
     });
   });
 });
