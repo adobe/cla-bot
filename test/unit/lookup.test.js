@@ -56,8 +56,7 @@ describe('lookup action', function () {
       };
       const result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve1']);
-
-      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalled());
+      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalledTimes(1));
     });
     it('should be able to handle multiple agreements when the first one matches', async function () {
       const params = {
@@ -66,7 +65,7 @@ describe('lookup action', function () {
       };
       const result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve1']);
-      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalled());
+      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalledTimes(1));
     });
     it('should be able to handle multiple agreements when the last one matches', async function () {
       const params = {
@@ -75,7 +74,7 @@ describe('lookup action', function () {
       };
       let result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve2']);
-      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalled());
+      response_mocks.forEach(response => expect(response.abort).toHaveBeenCalledTimes(1));
     });
     it('should be able to handle multiple agreements when none match', async function () {
       const params = {
