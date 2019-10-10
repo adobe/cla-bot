@@ -69,7 +69,7 @@ describe('lookup action', function () {
         agreements: ['12345', '99453'],
         username: 'steve'
       };
-      let result = await lookup.main(params);
+      const result = await lookup.main(params);
       expect(result.body.usernames).toEqual(['steve']);
       // Every matching agreement aborts all requests, so 2 * 2 = 4
       // This happens because our abort mock doesn't do anything
@@ -81,7 +81,7 @@ describe('lookup action', function () {
         agreements: ['12345', '99453'],
         username: 'bob'
       };
-      let result = await lookup.main(params);
+      const result = await lookup.main(params);
       expect(result.body.usernames).toEqual([]);
       expect(response_mock.abort).toHaveBeenCalledTimes(0);
     });
