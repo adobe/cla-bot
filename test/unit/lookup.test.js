@@ -22,21 +22,19 @@ describe('lookup action', function () {
     });
   });
   describe('happy path', function () {
-    let revert_request_mock, request_spy; // stubbing request module
+    let revert_lookup_agreement_mock, lookup_agreement_spy;
     let revert_parse_mock, parse_spy; // stubbing csv-parse module
     let revert_access_token_mock;
     let response_mocks = [];
     beforeEach(function () {
       revert_access_token_mock = spyOn(utils, 'get_adobe_sign_access_token').and.returnValue(Promise.resolve({ access_token: 'gimme ze access codes!' }));
-      request_spy = jasmine.createSpy('request spy').and.callFake(function (options) {
-        if (options.url.includes('/agreements')) {
-          const response_mock = Promise.resolve("this won't be used, but the promise will be");
-          response_mock.abort = jasmine.createSpy('abort spy');
-          response_mocks.push(response_mock);
-          return response_mock;
-        }
+      lookup_agreement_spy = jasmine.createSpy('lookup agreement spy').and.callFake(function (_args, _agreements) {
+        const response_mock = Promise.resolve('this string is ignored, but the promise will be used');
+        response_mock.abort = jasmine.createSpy('abort spy');
+        response_mocks.push(response_mock);
+        return response_mock;
       });
-      revert_request_mock = lookup.__set__('request', request_spy);
+      revert_lookup_agreement_mock = lookup.__set__('lookupAgreement', lookup_agreement_spy);
       let count = 1;
       parse_spy = jasmine.createSpy('parse spy').and.callFake(function () {
         return Promise.resolve([{ githubUsername: 'steve' + count++ }]);
@@ -44,8 +42,8 @@ describe('lookup action', function () {
       revert_parse_mock = lookup.__set__('parse', parse_spy);
     });
     afterEach(function () {
+      revert_lookup_agreement_mock();
       revert_access_token_mock();
-      revert_request_mock();
       revert_parse_mock();
       response_mocks = [];
     });
