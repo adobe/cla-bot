@@ -96,7 +96,7 @@ function lookupAndParseAgreement (args, agreement) {
 
   // We only need the result of usernamesPromise, however
   // we need to hold on to responsePromise in order to abort the HTTP request
-  // as it is both an {http.ClientRequest} and a {Promise<http.IncomingMessage>}
+  // as it is both an {http.ClientRequest} and a {Promise<responseBody>}
   return [responsePromise, usernamesPromise];
 }
 
