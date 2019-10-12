@@ -36,19 +36,21 @@ for more information on sending pull requests.
 
 Unit tests are used to test individual modules of the code in isolation with API calls
 and other external services mocked out. Unit tests should pass in local development and any CI builds.
-New features should be accompanied by unit tests.
+New features and bugfixes should be accompanied by unit tests.
 
 ### Integration tests
 
 Integration tests are used to test the application's interaction with GitHub by performing real API calls
 to create branches, files and PRs and asserting that the checker works correctly.
-Integration tests require the following [personal access tokens](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) to be set as environment variables:
+Integration tests require the following [GitHub personal access tokens](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) to be set as environment variables:
+
 - TEST_ONE_PAC: PAC for account adobeiotest1. Adobe ICLA signed. not a member of any orgs.
 - TEST_TWO_PAC: PAC for account adobeiotest2. Adobe CCLA signed. not a member of any orgs.
 - TEST_FOUR_PAC: PAC for account adobeiotest4. Adobe CCLA signed. member of the adobe org and magento org (and part of magento-employees team).
 - TEST_MAJ_PAC: PAC for account majtest. no CLA signed. not a member of any orgs.
 added as a _collaborator_ on magento/devops-cla-test and magento/devops-cla-test-adcb
 - TEST_MAJ583_PAC: PAC for account majtest583. no CLA signed. member of magento and the community-contributors team.
+
 The integration tests will fail unless all the above tokens are provided. Since the tokens are sensitve secrets,
 only CI builds in the main repo at [adobe/cla-bot](https://github.com/adobe/cla-bot) are configured with the tokens.
 It is expected that integration tests on CI builds in forked repos will fail. Once your PR has been approved,
