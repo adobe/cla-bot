@@ -13,7 +13,7 @@ you are expected to uphold this code. Please report unacceptable behavior to
 ## Have A Question?
 
 Start by filing an issue. The existing committers on this project work to reach
-consensus around project direction and issue solutions within issue threads
+the consensus around project direction and issue solutions within issue threads
 (when appropriate).
 
 ## Contributor License Agreement
@@ -46,14 +46,14 @@ Integration tests require the following [GitHub personal access tokens](https://
 
 - TEST_ONE_PAC: PAC for account adobeiotest1. Adobe ICLA signed. not a member of any orgs.
 - TEST_TWO_PAC: PAC for account adobeiotest2. Adobe CCLA signed. not a member of any orgs.
-- TEST_FOUR_PAC: PAC for account adobeiotest4. Adobe CCLA signed. member of the adobe org and magento org (and part of magento-employees team).
+- TEST_FOUR_PAC: PAC for account adobeiotest4. Adobe CCLA signed. member of the adobe org and Magento org (and part of magento-employees team).
 - TEST_MAJ_PAC: PAC for account majtest. no CLA signed. not a member of any orgs.
 added as a _collaborator_ on magento/devops-cla-test and magento/devops-cla-test-adcb
-- TEST_MAJ583_PAC: PAC for account majtest583. no CLA signed. member of magento and the community-contributors team.
+- TEST_MAJ583_PAC: PAC for account majtest583. no CLA signed. member of Magento and the community-contributors team.
 
-The integration tests will fail unless all the above tokens are provided. Since the tokens are sensitve secrets,
+The integration tests will fail unless all the above tokens are provided. Since the tokens are sensitive secrets,
 only CI builds in the main repo at [adobe/cla-bot](https://github.com/adobe/cla-bot) are configured with the tokens.
-It is expected that integration tests on CI builds in forked repos will fail. Once your PR has been approved,
+It is expected that integration tests on CI build in forked repos will fail. Once your PR has been approved,
 your changes will be pushed to a new branch on the main repo for a full CI pass before being merged into master.
 
 ## From Contributor To Committer
