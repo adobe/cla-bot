@@ -17,15 +17,12 @@ This repo contains three actions, which are functions that run on a serverless
 - [`./checker`][checker] contains an action that runs on every [github.com/adobe]
   pull request open, close and synchronize. Checker's job is to check if the user
   submitting the pull request has signed the [CLA][cla] or if the user is an Adobe or
-  Magento employee (by checking [github.com/adobe] or magento organization membership).
+  Magento employee (by checking [github.com/adobe] or Magento organization membership).
 - [`./setgithubcheck`][setgithubcheck] contains an action that interacts with the
-  GitHub REST API's [Checks API](https://developer.github.com/v3/checks/runs) to
-  set checkmarks on pull requests. It is invoked by other actions to communicate
-  pass/fail to pull request authors.
+  GitHub REST API's [Checks API](https://developer.github.com/v3/checks/runs) to set checkmarks on pull requests. It is invoked by other actions to communicate pass/fail to pull request authors.
 - [`./lookup`][lookup] contains an action that accepts `agreement_id`s as `agreements`
   parameter, interacts with [Adobe Sign formData APIs][formdataapi], it parses the
-  formData of all the agreements to lookup the GitHub usernames in the agreements
-  and returns a consolidated list of GitHub usernames.
+  formData of all the agreements to lookup the GitHub usernames in the agreements and returns a consolidated list of GitHub usernames.
 - [`./signwebhook`][signwebhook] contains an action that receives event payloads
   from Adobe Sign when users sign our CLA agreement. This enables a push-based
   flow and foregoes the user having to take additional steps after they sign our
@@ -115,19 +112,16 @@ action. To set the GitHub App up:
 3. Fill out a name and description for your App.
 4. Fill out the Webhook URL to match the URL of your `checker` action. If you
    have not deployed the `checker` action yet, follow the above instructions on
-   [Creating New Actions](#creating-new-actions). If you have already deployed
-   this action, see below for information on [how to retrieve the URL of the
-   action](#getting-urls-of-actions).
+   [Creating New Actions](#creating-new-actions). If you have already deployed this action, see below for information on [how to retrieve the URL of the action](#getting-urls-of-actions).
 5. Under the Permissions section, give the App Read and Write access to Checks,
-   Read-only access to Repository Metadata, Read-only access to Pull Requests
-   and Read and Write access to Commit Statuses.
+   Read-only access to Repository Metadata, Read-only access to Pull Requests and Read and Write access to Commit Statuses.
 6. Leave the User Permissions as-is.
 7. Under Subscribe to Events, check Pull Requests.
 
 Once created, you will have the chance to generate and store a Private Key. Keep
 this and add it to your `config.json` file! You will also want to make note of
 the GitHub App ID - again, this goes into your `config.json`. Finally, you will
-want to Install the app in to your organizations or repositories of choice. You
+want to install the app into your organizations or repositories of choice. You
 can do so from the same Settings page of the App.
 
 ### Debug
@@ -140,7 +134,7 @@ Settings](https://github.com/organizations/adobe/settings/apps/adobe-cla-bot/adv
 
 #### Check Logs on Adobe Runtime
 
-Get list of action invocations, or _activations_, that executed in our namespace:
+Get a list of action invocations, or _activations_, that executed in our namespace:
 
 ```
 wsk activation list
