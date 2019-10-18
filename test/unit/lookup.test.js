@@ -22,68 +22,43 @@ describe('lookup action', function () {
     });
   });
   describe('happy path', function () {
-    let revert_lookup_agreement_mock, lookup_agreement_spy;
+    let revert_request_mock, request_spy; // stubbing request module
     let revert_parse_mock, parse_spy; // stubbing csv-parse module
     let revert_access_token_mock;
-    let response_mock;
     beforeEach(function () {
       revert_access_token_mock = spyOn(utils, 'get_adobe_sign_access_token').and.returnValue(Promise.resolve({ access_token: 'gimme ze access codes!' }));
-
-      response_mock = Promise.resolve('this string is ignored, but the promise will be used');
-      response_mock.abort = jasmine.createSpy('abort spy');
-      lookup_agreement_spy = jasmine.createSpy('lookup agreement spy').and.returnValue(response_mock);
-      revert_lookup_agreement_mock = lookup.__set__('lookupAgreement', lookup_agreement_spy);
-
-      let count = 1;
-      parse_spy = jasmine.createSpy('parse spy').and.callFake(function () {
-        return Promise.resolve([{ githubUsername: 'steve' + count++ }]);
+      request_spy = jasmine.createSpy('request spy').and.callFake(function (options) {
+        if (options.url.includes('oauth/refresh')) {
+          return Promise.resolve({ access_token: 'yes' });
+        } else {
+          return Promise.resolve('this will not be used');
+        }
       });
+      revert_request_mock = lookup.__set__('request', request_spy);
+      parse_spy = jasmine.createSpy('parse spy').and.returnValue(Promise.resolve([{ githubUsername: 'steve' }]));
       revert_parse_mock = lookup.__set__('parse', parse_spy);
     });
     afterEach(function () {
-      revert_lookup_agreement_mock();
       revert_access_token_mock();
+      revert_request_mock();
       revert_parse_mock();
     });
     it('should be able to handle a single agreement', async function () {
       const params = {
-        agreements: '12345',
-        username: 'steve1'
+        agreements: '12345'
       };
       const result = await lookup.main(params);
-      expect(result.body.usernames).toEqual(['steve1']);
-      expect(response_mock.abort).toHaveBeenCalledTimes(1);
+      expect(result.body.usernames).toContain('steve');
     });
-    it('should be able to handle multiple agreements when the first one matches', async function () {
+    it('should be able to handle multiple agreements', async function () {
+      parse_spy.and.callFake(function () {
+        return Promise.resolve([{ githubUsername: 'steve' + Math.random() }]);
+      });
       const params = {
-        agreements: ['12345', '43561'],
-        username: 'steve1'
+        agreements: ['12345', '43561']
       };
       const result = await lookup.main(params);
-      expect(result.body.usernames).toEqual(['steve1']);
-      expect(response_mock.abort).toHaveBeenCalledTimes(2);
-    });
-    it('should be able to handle multiple agreements when all match', async function () {
-      parse_spy.and.returnValue(Promise.resolve([{ githubUsername: 'steve' }]));
-      const params = {
-        agreements: ['12345', '99453'],
-        username: 'steve'
-      };
-      const result = await lookup.main(params);
-      expect(result.body.usernames).toEqual(['steve']);
-      // Every matching agreement aborts all requests, so 2 * 2 = 4
-      // This happens because our abort mock doesn't do anything
-      // In real code, the abort will prevent multiple usernamePromises from resolving
-      expect(response_mock.abort).toHaveBeenCalledTimes(4);
-    });
-    it('should be able to handle multiple agreements when none match', async function () {
-      const params = {
-        agreements: ['12345', '99453'],
-        username: 'bob'
-      };
-      const result = await lookup.main(params);
-      expect(result.body.usernames).toEqual([]);
-      expect(response_mock.abort).toHaveBeenCalledTimes(0);
+      expect(result.body.usernames.length).toBe(2);
     });
   });
 });

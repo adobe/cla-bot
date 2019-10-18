@@ -14,7 +14,6 @@ const request = require('request-promise-native');
 const parse = require('util').promisify(require('csv-parse'));
 const utils = require('../utils.js');
 const config = utils.get_config();
-const transpose = m => m[0].map((x, i) => m.map(x => x[i]));
 
 async function main (params) {
   let agreements = [];
@@ -48,7 +47,6 @@ async function main (params) {
     usernames = await lookup({
       agreements: agreements,
       access_token: access_token,
-      username: params.username,
       apiVersion
     });
   } catch (e) {
@@ -61,46 +59,17 @@ async function main (params) {
   };
 }
 
-function lookup (args) {
+async function lookup (args) {
   const agreements = args.agreements;
-  const username = args.username.toLowerCase();
-  const promiseMatrix = agreements.map(agreement => lookupAndParseAgreement(args, agreement));
-  const [responsePromises, usernamesPromises] = transpose(promiseMatrix);
-
-  // A new Promise that resolves to either
-  // 1. Username from the first Sign API call that includes the username
-  // 2. Empty array if none of the Sign API calls includes the username
-  // Promise is rejected if any of the Sign API calls fail before resolution
-  // If the username is found, all requests are aborted (it's okay to abort completed requests)
-  return new Promise((resolve, reject) => {
-    Promise.all(usernamesPromises.map(promise => {
-      return promise.then(agreementUsers => {
-        if (agreementUsers.map(u => u.toLowerCase()).includes(username)) {
-          resolve([username]);
-          responsePromises.forEach(p => p.abort());
-        }
-      });
-    })).then(_results => resolve([]), error => reject(error));
-  });
+  let usernames = [];
+  await Promise.all(agreements.map(async function (agreement) {
+    const agreementUsers = await lookupSingleAgreement(args, agreement);
+    usernames = Array.from(new Set(usernames.concat(agreementUsers)));
+  }));
+  return usernames;
 }
 
-function lookupAndParseAgreement (args, agreement) {
-  const responsePromise = lookupAgreement(args, agreement);
-  const usernamesPromise = responsePromise
-    .then(function (response) {
-      return parse(response.trim(), { columns: true });
-    })
-    .then(function (records) {
-      return Promise.resolve(extractUsernames(records));
-    });
-
-  // We only need the result of usernamesPromise, however
-  // we need to hold on to responsePromise in order to abort the HTTP request
-  // as it is both an {http.ClientRequest} and a {Promise<responseBody>}
-  return [responsePromise, usernamesPromise];
-}
-
-function lookupAgreement (args, agreement) {
+async function lookupSingleAgreement (args, agreement) {
   const options = {
     method: 'GET',
     url: `https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`,
@@ -109,13 +78,11 @@ function lookupAgreement (args, agreement) {
       Authorization: 'Bearer ' + args.access_token
     }
   };
-  return request(options);
-}
-
-function extractUsernames (agreementRows) {
-  // Logic to get value of Custom Field 8 or Custom Field 1 or githubUsername from the parsed CSV
+  const response = await request(options);
+  // Logic to parse CSV and get the value for Custom Field 8 or Custom Field 1 or githubUsername
+  const records = await parse(response.trim(), { columns: true });
   let usernames = [];
-  const data = agreementRows[0];
+  const data = records[0];
   if (data['Custom Field 8'] !== undefined && data['Custom Field 8'].trim() !== '') {
     // CCLA; form fields are a text area that accept multiple employee
     // usernames
