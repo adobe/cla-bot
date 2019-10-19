@@ -158,11 +158,12 @@ async function main (params) {
         }));
       }
     }));
+    const error_text = `PRs set for ${usernames.join(', ')} failed: ${errors.join('\n')}`;
     const status_text = (completed.length ? `PRs set for ${usernames.join(', ')} completed: ${completed.join('\n')}` : `No PRs found for ${usernames.join(',')}`);
     return {
       statusCode: 201,
       headers,
-      body: errors.length ? errors.join('\n') : status_text
+      body: errors.length ? error_text : status_text
     };
   } catch (e) {
     return {
