@@ -11,6 +11,7 @@ before_install:
 script:
   - npm run lint
   - npm run test:unit
+  - npm run report-coverage
   - bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
   - npm run test:integration
 deploy:
