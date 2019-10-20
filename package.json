@@ -7,7 +7,9 @@
     "test": "npm run lint && npm run test:unit",
     "lint": "eslint checker lookup setgithubcheck signwebhook test",
     "test:unit": "cross-env NODE_ENV=test jasmine --config=test/unit/jasmine.json --reporter=jasmine-console-reporter",
-    "test:integration": "cross-env NODE_ENV=test jasmine --config=test/integration/jasmine.json --reporter=jasmine-console-reporter"
+    "test:integration": "cross-env NODE_ENV=test jasmine --config=test/integration/jasmine.json --reporter=jasmine-console-reporter",
+    "test:coverage": "nyc npm run test:unit",
+    "report-coverage": "npm run test:coverage && codecov"
   },
   "repository": {
     "type": "git",
@@ -32,6 +34,7 @@
   },
   "devDependencies": {
     "@octokit/rest": "^16.28.7",
+    "codecov": "^3.6.1",
     "cross-env": "^5.2.0",
     "eslint": "^6.5.1",
     "eslint-config-standard": "^14.1.0",
@@ -43,6 +46,7 @@
     "jasmine": "^3.3.1",
     "jasmine-console-reporter": "^3.1.0",
     "node-fetch": "^2.6.0",
+    "nyc": "^14.1.1",
     "rewire": "^4.0.1"
   }
 }
