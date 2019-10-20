@@ -113,7 +113,7 @@ describe('github integration tests', () => {
         base: 'master'
       });
       const suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
-      expect(suite.conclusion).not.toEqual('success');
+      expect(suite.conclusion).not.toEqual('success').toBeA('string');
       const teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
       await teardown();
     });
@@ -129,7 +129,7 @@ describe('github integration tests', () => {
         base: 'master'
       });
       const suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
-      expect(suite.conclusion).not.toEqual('success');
+      expect(suite.conclusion).not.toEqual('success').toMatch(/success/);
       const teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await teardown();
     });
