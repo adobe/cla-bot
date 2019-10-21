@@ -92,7 +92,7 @@ async function waitForCheck (github, owner, repo, ref) {
   return checks.check_suites.find(findStagingBot);
 }
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
 describe('github integration tests', () => {
   describe('pull requests from user with no signed cla nor member of any org (account majtest)', () => {
