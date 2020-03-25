@@ -34,7 +34,7 @@ if (!process.env.TEST_MAJ583_PAC) throw new Error('environment variable `TEST_MA
 
 const ADOBE_REPO = 'cla-bot-playground';
 const PRIVATE_MAGENTO_REPO = 'devops-cla-test';
-const PUBLIC_MAGENTO_REPO = 'devops-cla-test-adcb';
+const PUBLIC_MAGENTO_REPO = 'devops-cla-test-public';
 
 function createBranch (github, user, repo, newBranch) {
   return async function () {
