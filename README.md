@@ -46,11 +46,17 @@ Make sure you've `npm install`ed, then simply `npm test`. This will run the lint
 and unit tests. You can also invoke each of these individually with `npm run
 lint` and `npm run test:unit`.
 
+### Integration Tests
+
 There are also integration tests against github.com, though you need several
 special environment variables representing github.com personal access tokens to
-run them. It is expected only maintainers of this repo have access to them, and
-they are also stored in travis-ci as encrypted environment variables. These
-tests can be run via `npm run test:integration`.
+several GitHub.com accounts to run them correctly. It is expected only maintainers
+of this repo have access to them, and they are also stored in travis-ci as encrypted
+environment variables. These tests can be run via `npm run test:integration`.
+
+The account credentials for these accounts are stored in the Adobe Open Source
+Office secure credentials location, and only Open Source Office members are
+expected to have access to them.
 
 ## Runtime Actions
 
