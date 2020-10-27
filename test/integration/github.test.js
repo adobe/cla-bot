@@ -134,7 +134,7 @@ describe('github integration tests', () => {
       await teardown();
     });
   });
-  describe('pull requests from user who is a member of the adobe or magento orgs (and magento-employees team) (account adobeiotest4)', () => {
+  describe('pull requests from user who is a member of the adobe or magento-commerce orgs (account adobeiotest4)', () => {
     const user = 'adobeiotest4';
     const newBranch = '' + new Date().valueOf();
     const github = new Octokit({

@@ -44,9 +44,6 @@ describe('checker action', function () {
         orgs: {
           checkMembership: jasmine.createSpy('orgs.checkMembership spy'),
           checkPublicMembership: jasmine.createSpy('orgs.checkPublicMembership spy')
-        },
-        teams: {
-          getMembership: jasmine.createSpy('team.getMembership spy')
         }
       };
       app_spy = jasmine.createSpy('github app spy').and.returnValue({
@@ -134,7 +131,7 @@ describe('checker action', function () {
           action: 'opened',
           installation: { id: '5431' }
         };
-        github_api_stub.teams.getMembership.and.returnValue(Promise.resolve({
+        github_api_stub.orgs.checkMembership.and.returnValue(Promise.resolve({
           status: 204
         }));
         openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
@@ -160,8 +157,9 @@ describe('checker action', function () {
           action: 'opened',
           installation: { id: '5431' }
         };
-        github_api_stub.teams.getMembership.and.returnValue(Promise.reject({
-          message: 'Not Found'
+        github_api_stub.orgs.checkMembership.and.returnValue(Promise.reject({
+          code: 404,
+          message: 'hiren is not a member of the organization'
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
@@ -210,8 +208,9 @@ describe('checker action', function () {
           action: 'opened',
           installation: { id: '5431' }
         };
-        github_api_stub.teams.getMembership.and.returnValue(Promise.reject({
-          message: 'Not Found'
+        github_api_stub.orgs.checkMembership.and.returnValue(Promise.reject({
+          code: 404,
+          message: 'hiren is not a member of the organization'
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
@@ -260,8 +259,9 @@ describe('checker action', function () {
           action: 'opened',
           installation: { id: '5431' }
         };
-        github_api_stub.teams.getMembership.and.returnValue(Promise.reject({
-          message: 'Not Found'
+        github_api_stub.orgs.checkMembership.and.returnValue(Promise.reject({
+          code: 404,
+          message: 'hiren is not a member of the organization'
         }));
         request_spy.and.callFake(function (options) {
           if (options.url.includes('agreements')) {
