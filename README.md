@@ -17,7 +17,8 @@ This repo contains three actions, which are functions that run on a serverless
 - [`./checker`][checker] contains an action that runs on every [github.com/adobe]
   pull request open, close and synchronize. Checker's job is to check if the user
   submitting the pull request has signed the [CLA][cla] or if the user is an Adobe or
-  Magento employee (by checking [github.com/adobe] or magento organization membership).
+  Magento employee (by checking [github.com/adobe] or [github.com/magento-commerce]
+  organizations membership).
 - [`./setgithubcheck`][setgithubcheck] contains an action that interacts with the
   GitHub REST API's [Checks API](https://developer.github.com/v3/checks/runs) to
   set checkmarks on pull requests. It is invoked by other actions to communicate

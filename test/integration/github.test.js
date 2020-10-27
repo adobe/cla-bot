@@ -24,7 +24,7 @@ if (!process.env.TEST_MAJ583_PAC) throw new Error('environment variable `TEST_MA
  * - TEST_TWO_PAC: PAC for account adobeiotest2. Adobe CCLA signed. not a member
  *   of any orgs.
  * - TEST_FOUR_PAC: PAC for account adobeiotest4. Adobe CCLA signed. member of
- *   the adobe org and magento org (and part of magento-employees team).
+ *   the adobe org and magento-commerce org.
  * - TEST_MAJ_PAC: PAC for account majtest. no CLA signed. not a member of any
  *   orgs. added as a _collaborator_ on magento/devops-cla-test and
  *   magento/devops-cla-test-adcb
