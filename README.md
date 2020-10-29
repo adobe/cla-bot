@@ -176,3 +176,11 @@ wsk action get cla-checker --url
 [lookup]: https://github.com/adobe/cla-bot/tree/master/lookup
 [signwebhook]: https://github.com/adobe/cla-bot/tree/master/signwebhook
 [formdataapi]: https://corporate.na1.echosign.com/public/docs/restapi/v5#!/agreements/getFormData
+
+### Contributing
+
+Contributions are welcomed! Read the [Contributing Guide](.github/CONTRIBUTING.md) for more information.
+
+### Licensing
+
+This project is licensed under the Apache V2 License. See [LICENSE](LICENSE) for more information.
