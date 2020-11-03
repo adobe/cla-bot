@@ -134,61 +134,6 @@ describe('github integration tests', () => {
       await teardown();
     });
   });
-  describe('pull requests from user who is a member of the adobe or magento orgs (and magento-employees team) (account adobeiotest4)', () => {
-    const user = 'adobeiotest4';
-    const newBranch = '' + new Date().valueOf();
-    const github = new Octokit({
-      auth: process.env.TEST_FOUR_PAC
-    });
-    it('should approve a pull request to an adobe repo', async () => {
-      const setup = createBranch(github, user, ADOBE_REPO, newBranch);
-      await setup();
-      console.log(`Creating pull request to adobe/${ADOBE_REPO}...`);
-      const pr = await github.pulls.create({
-        owner: 'adobe',
-        repo: ADOBE_REPO,
-        title: `testing build ${newBranch}`,
-        head: `${user}:${newBranch}`,
-        base: 'master'
-      });
-      const suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
-      expect(suite.conclusion).toEqual('success');
-      const teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
-      await teardown();
-    });
-    it('should approve a pull request to a private magento repo', async () => {
-      const setup = createBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
-      await setup();
-      console.log(`Creating pull request to magento/${PRIVATE_MAGENTO_REPO}...`);
-      const pr = await github.pulls.create({
-        owner: 'magento',
-        repo: PRIVATE_MAGENTO_REPO,
-        title: `testing build ${newBranch}`,
-        head: `${user}:${newBranch}`,
-        base: 'master'
-      });
-      const suite = await waitForCheck(github, 'magento', PRIVATE_MAGENTO_REPO, pr.data.head.sha);
-      expect(suite.conclusion).toEqual('success');
-      const teardown = deleteBranch(github, user, PRIVATE_MAGENTO_REPO, newBranch);
-      await teardown();
-    });
-    it('should approve a pull request to a public magento repo', async () => {
-      const setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
-      await setup();
-      console.log(`Creating pull request to magento/${PUBLIC_MAGENTO_REPO}...`);
-      const pr = await github.pulls.create({
-        owner: 'magento',
-        repo: PUBLIC_MAGENTO_REPO,
-        title: `testing build ${newBranch}`,
-        head: `${user}:${newBranch}`,
-        base: 'master'
-      });
-      const suite = await waitForCheck(github, 'magento', PUBLIC_MAGENTO_REPO, pr.data.head.sha);
-      expect(suite.conclusion).toEqual('success');
-      const teardown = deleteBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
-      await teardown();
-    });
-  });
   describe('pull requests from user with a signed Adobe ICLA (account adobeiotest1)', () => {
     const user = 'adobeiotest1';
     const newBranch = '' + new Date().valueOf();

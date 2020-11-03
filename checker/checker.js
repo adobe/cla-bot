@@ -17,13 +17,12 @@ const utils = require('../utils.js');
 const config = utils.get_config();
 /*
 gets fired from github pr creation/update webhook.
-* Check if they are adobe/magento employee, if yes, give checkmark
+* Check if they are adobe employee, if yes, give checkmark
 * If not an employee, report back if the CLA is already signed
 * if signed, give checkmark
 * if not signed, give an 'x' and tell them to go sign at https://opensource.adobe.com/cla.html
 */
 const valid_pr_events = ['opened', 'reopened', 'synchronize'];
-const MAGENTO_EMPLOYEES_TEAM = 2032477;
 
 async function main (params) {
   if (!params.pull_request || !valid_pr_events.includes(params.action)) {
@@ -66,27 +65,11 @@ async function main (params) {
     return utils.action_error(e, 'Error retrieving GitHub API instance on behalf of app installation.');
   }
 
-  // Check if author is employee; this has separate logic for Adobe vs. Magento
-  // employees.
+  // Check if author is employee.
   let is_employee;
   if (org === 'magento') {
-    // For the magento org, we need to see if the user is a member of the
-    // magento-employees team to determine whether they are an employee
-    // m.then(gh => gh.teams.getMembership({ team_id: teamId, username: user }).then(result => console.log(`${user} is a ${result.data.state} ${result.data.role} of the magento-employees team`)).catch(err => { console.error(`${user} got membership in magento-employees team result of "${err.message}"!`); }));
-    try {
-      is_employee = await github.teams.getMembership({
-        team_id: MAGENTO_EMPLOYEES_TEAM,
-        username: user
-      });
-    } catch (e) {
-      if (e.message.includes('Not Found')) {
-        const res = await check_cla(ow, args);
-        return res;
-      } else {
-        return utils.action_error(e, 'Error during checking of Magento employees membership in the Magento org.');
-      }
-    }
-    const res = await set_green_is_adobe_employee(ow, args, org);
+    // For the magento org, we want everyone to sign the CLA
+    const res = await check_cla(ow, args);
     return res;
   } else {
     // For non-Magento orgs, as long as user is a member of the org, they are
@@ -130,7 +113,7 @@ async function main (params) {
           // the promise.
           // more details here: https://developer.github.com/v3/orgs/members/#check-public-membership
           if (public_member.status === 204) {
-            const res = await set_green_is_adobe_employee(ow, args);
+            const res = await set_green_is_adobe_employee(ow, args, 'adobe');
             return res;
           }
         } else {
@@ -280,12 +263,8 @@ async function set_green_is_bot (ow, args) {
 }
 
 async function set_green_is_adobe_employee (ow, args, membership_org) {
-  let company = 'Adobe';
-  let reason = `membership in github.com/${membership_org}`;
-  if (membership_org === 'magento') {
-    company += ' (Magento)';
-    reason = `membership in github.com/magento's employees team`;
-  }
+  const company = 'Adobe';
+  const reason = `membership in github.com/${membership_org}`;
   let result;
   try {
     result = await ow.actions.invoke({
