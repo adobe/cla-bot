@@ -165,7 +165,12 @@ async function check_cla (ow, args) {
   if (response.userAgreementList && response.userAgreementList.length) {
     // We found agreements containing the github username to search through.
     const agreements = response.userAgreementList.filter(function (agreement) {
-      return (agreement.status === 'SIGNED' && (agreement.name === 'Adobe Contributor License Agreement' || agreement.name === 'Adobe CLA'));
+      return (
+        (agreement.status === 'SIGNED' ||
+          agreement.status === 'FORM_FILLED') &&
+        (agreement.name === 'Adobe Contributor License Agreement' ||
+          agreement.name === 'Adobe CLA')
+      );
     }).map(function (agreement) {
       return agreement.agreementId;
     });
