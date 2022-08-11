@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for choosing to contribute!
+Thanks for choosing to contribute! :)
 
 The following are a set of guidelines to follow when contributing to this project.
 
