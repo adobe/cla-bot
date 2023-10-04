@@ -266,7 +266,7 @@ describe('github integration tests', () => {
         repo: ADOBE_REPO,
         title: `testing build ${newBranch}`,
         head: `${user}:${newBranch}`,
-        base: 'mergeq' // need to create this branch and give it merge_queue protections
+        base: 'mergeq'
       });
       const suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
       expect(suite.conclusion).toEqual('success');
