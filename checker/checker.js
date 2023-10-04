@@ -25,6 +25,10 @@ gets fired from github pr creation/update webhook.
 const valid_pr_events = ['opened', 'reopened', 'synchronize', 'checks_requested'];
 
 async function main (params) {
+  // it was suggested that we need to check for params.merge_group here, but
+  // it doesn't appear to be in the types, so I'll log it out and check in a run
+  // in the integration tests once we get the right branch in place
+  console.log(params);
   if (!params.pull_request || !valid_pr_events.includes(params.action)) {
     return {
       statusCode: 202,
