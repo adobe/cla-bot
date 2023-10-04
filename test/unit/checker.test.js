@@ -92,6 +92,33 @@ describe('checker action', function () {
         expect(result.statusCode).toBe(200);
       }));
     });
+    it('should pass merge queue commits', async function () {
+      github_api_stub.orgs.checkMembership.and.returnValue(Promise.resolve({
+        status: 204
+      }));
+      openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
+      const events = ['checks_requested'];
+      const params = events.map(function (event) {
+        return {
+          pull_request: {
+            user: { login: 'hiren' },
+            base: {
+              repo: {
+                owner: { login: 'adobe' },
+                name: 'photoshop'
+              }
+            },
+            head: { sha: '12345' }
+          },
+          action: event,
+          installation: { id: '5431' }
+        };
+      });
+      await Promise.all(params.map(async function (param) {
+        const result = await checker.main(param);
+        expect(result.statusCode).toBe(200);
+      }));
+    });
     it('should invoke the setgithubcheck action with a status of completed if user is a bot', async function () {
       const params = {
         pull_request: {

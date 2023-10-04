@@ -22,7 +22,7 @@ gets fired from github pr creation/update webhook.
 * if signed, give checkmark
 * if not signed, give an 'x' and tell them to go sign at https://opensource.adobe.com/cla.html
 */
-const valid_pr_events = ['opened', 'reopened', 'synchronize'];
+const valid_pr_events = ['opened', 'reopened', 'synchronize', 'checks_requested'];
 
 async function main (params) {
   if (!params.pull_request || !valid_pr_events.includes(params.action)) {
@@ -49,7 +49,9 @@ async function main (params) {
     user: user
   };
 
-  if (params.pull_request.user.type === 'Bot') {
+  // better to check the action? or the user type? it should also be bot, but I
+  // haven't been successful in seeing a merge_group checks_requested event yet in my own testing.
+  if (params.pull_request.user.type === 'Bot' || params.action === 'checks_requested') {
     const res = await set_green_is_bot(ow, args);
     return res;
   }

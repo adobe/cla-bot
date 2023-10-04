@@ -251,4 +251,34 @@ describe('github integration tests', () => {
       await teardown();
     });
   });
+  describe('merge queues', () => {
+    const user = 'adobeiotest2';
+    const newBranch = '' + new Date().valueOf();
+    const github = new Octokit({
+      auth: process.env.TEST_TWO_PAC
+    });
+    it('should approve a check_request from a merge group bot', async () => {
+      const setup = createBranch(github, user, ADOBE_REPO, newBranch);
+      await setup();
+      console.log(`Creating pull request to adobe/${ADOBE_REPO}...`);
+      const pr = await github.pulls.create({
+        owner: 'adobe',
+        repo: ADOBE_REPO,
+        title: `testing build ${newBranch}`,
+        head: `${user}:${newBranch}`,
+        base: 'mergeq' // need to create this branch and give it merge_queue protections
+      });
+      const suite = await waitForCheck(github, 'adobe', ADOBE_REPO, pr.data.head.sha);
+      expect(suite.conclusion).toEqual('success');
+      const commit = await github.pulls.merge({ // might be how we api merge queue?
+        owner: 'adobe',
+        repo: ADOBE_REPO,
+        pull_number: pr.data.number
+      });
+      const suite2 = await waitForCheck(github, 'adobe', ADOBE_REPO, commit.data.sha); // might be how we check the sha?
+      expect(suite2.conclusion).toEqual('success');
+      const teardown = deleteBranch(github, user, ADOBE_REPO, newBranch);
+      await teardown();
+    });
+  });
 });
