@@ -93,25 +93,14 @@ describe('checker action', function () {
       }));
     });
     it('should pass merge queue commits', async function () {
-      github_api_stub.orgs.checkMembership.and.returnValue(Promise.resolve({
-        status: 204
-      }));
       openwhisk_stub.actions.invoke.and.returnValue(Promise.resolve({}));
       const events = ['checks_requested'];
       const params = events.map(function (event) {
         return {
-          pull_request: {
-            user: { login: 'hiren' },
-            base: {
-              repo: {
-                owner: { login: 'adobe' },
-                name: 'photoshop'
-              }
-            },
-            head: { sha: '12345' }
-          },
           action: event,
-          installation: { id: '5431' }
+          merge_group: {
+            head_sha: 'madeuphash'
+          }
         };
       });
       await Promise.all(params.map(async function (param) {

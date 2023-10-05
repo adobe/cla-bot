@@ -22,13 +22,20 @@ gets fired from github pr creation/update webhook.
 * if signed, give checkmark
 * if not signed, give an 'x' and tell them to go sign at https://opensource.adobe.com/cla.html
 */
-const valid_pr_events = ['opened', 'reopened', 'synchronize', 'checks_requested'];
+const valid_pr_events = ['opened', 'reopened', 'synchronize'];
+// if we're in a merge queue, then we had to pass our cla check already
+const valid_merge_group_events = ['checks_requested'];
 
 async function main (params) {
-  // it was suggested that we need to check for params.merge_group here, but
-  // it doesn't appear to be in the types, so I'll log it out and check in a run
-  // in the integration tests once we get the right branch in place
-  console.log(params);
+  // we should be falling in to the 202 ignore case for merge_group events because they don't have params.pull_request
+  // possibly 202 isn't good enough for a required check though?
+  console.log('params: ', params);
+  if (valid_merge_group_events.includes(params.action)) {
+    return {
+      statusCode: 200,
+      body: 'Merge queue, we already passed the CLA check on the PR, ignoring'
+    };
+  }
   if (!params.pull_request || !valid_pr_events.includes(params.action)) {
     return {
       statusCode: 202,
@@ -53,9 +60,7 @@ async function main (params) {
     user: user
   };
 
-  // better to check the action? or the user type? it should also be bot, but I
-  // haven't been successful in seeing a merge_group checks_requested event yet in my own testing.
-  if (params.pull_request.user.type === 'Bot' || params.action === 'checks_requested') {
+  if (params.pull_request.user.type === 'Bot') {
     const res = await set_green_is_bot(ow, args);
     return res;
   }
