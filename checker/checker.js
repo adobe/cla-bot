@@ -27,8 +27,12 @@ const valid_pr_events = ['opened', 'reopened', 'synchronize'];
 const valid_merge_group_events = ['checks_requested'];
 
 async function main (params) {
-  // we should be falling in to the 202 ignore case for merge_group events because they don't have params.pull_request
-  // possibly 202 isn't good enough for a required check though?
+  // technically, we shouldn't even need to check this here, as anything without a
+  // pull_request property should have been filtered out by the webhook
+  // which means that a merge_queue should already pass, the only reason we have been
+  // failing so far I believe is because we were not getting the event at all, so couldn't
+  // mark it as passing. On the chance I'm wrong, I'm leaving this here for now.
+  // but we may not even need a code change
   console.log('params: ', params);
   if (valid_merge_group_events.includes(params.action)) {
     return {
