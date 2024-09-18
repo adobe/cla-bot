@@ -10,6 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
+const fetch = require('node-fetch');
 const github_app = require('github-app');
 const openwhisk = require('openwhisk');
 const utils = require('../utils.js');
@@ -37,9 +38,9 @@ async function main (params) {
   if (isMergeQueue) {
     const res = await set_green_is_bot(ow, {
       commit_sha: params.merge_group.head_sha,
-        org: params.repository.owner.login,
-        repo: params.repository.name,
-        start_time: (new Date()).toISOString(),
+      org: params.repository.owner.login,
+      repo: params.repository.name,
+      start_time: (new Date()).toISOString()
     });
     return res;
   }
@@ -161,12 +162,12 @@ async function check_cla (ow, args) {
       method: 'GET',
       headers: {
         'cache-control': 'no-cache',
-        'Access-Token': access_token,
-      },
+        'Access-Token': access_token
+      }
     });
 
     if (!fetchResponse.ok) {
-      return utils.action_error(e, 'Error retrieving Adobe Sign agreements.');
+      return utils.action_error(new Error('Failed to fetch'), 'Error retrieving Adobe Sign agreements.');
     }
 
     response = await fetchResponse.json();

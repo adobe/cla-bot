@@ -69,7 +69,7 @@ async function lookup (args) {
 }
 
 async function lookupSingleAgreement (args, agreement) {
-  const fetchResponse = await fetch(`https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`,{
+  const fetchResponse = await fetch(`https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`, {
     method: 'GET',
     headers: {
       'cache-control': 'no-cache',
