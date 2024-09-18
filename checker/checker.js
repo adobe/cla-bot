@@ -10,7 +10,6 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const request = require('request-promise-native');
 const github_app = require('github-app');
 const openwhisk = require('openwhisk');
 const utils = require('../utils.js');
@@ -157,20 +156,20 @@ async function check_cla (ow, args) {
   }
 
   // Next we look up signed agreements containing the author's github username in Adobe Sign
-  const options = {
-    method: 'GET',
-    url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements',
-    qs: {
-      query: args.user
-    },
-    headers: {
-      'cache-control': 'no-cache',
-      'Access-Token': access_token
-    },
-    json: true
-  };
   try {
-    response = await request(options);
+    const fetchResponse = await fetch(`https://api.na1.echosign.com:443/api/rest/v5/agreements?query=${args.user}`, {
+      method: 'GET',
+      headers: {
+        'cache-control': 'no-cache',
+        'Access-Token': access_token,
+      },
+    });
+
+    if (!fetchResponse.ok) {
+      return utils.action_error(e, 'Error retrieving Adobe Sign agreements.');
+    }
+
+    response = await fetchResponse.json();
   } catch (e) {
     return utils.action_error(e, 'Error retrieving Adobe Sign agreements.');
   }
