@@ -1,0 +1,18 @@
+name: Test
+run-name: ${{ github.actor }} is testing 🚀
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 14
+      - run: npm ci
+      - run: mkdir -p ~/.local/bin
+      - run: curl -L https://github.com/apache/incubator-openwhisk-cli/releases/download/latest/OpenWhisk_CLI-latest-linux-amd64.tgz | tar xz -C ~/.local/bin
+      - run: npm run lint
+      - run: npm run test:unit
+      - run: npm run report-coverage
+      - run: echo "🍏 This job's status is ${{ job.status }}."
