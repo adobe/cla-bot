@@ -25,7 +25,8 @@ gets fired from github pr creation/update webhook.
 const valid_pr_events = ['opened', 'reopened', 'synchronize'];
 
 async function main (params) {
-  if (!params.pull_request || !valid_pr_events.includes(params.action)) {
+  let isMergeQueue = params.merge_group && params.action === 'checks_requested;
+  if (!params.pull_request || !valid_pr_events.includes(params.action) && !isMergeQueue) {
     return {
       statusCode: 202,
       body: 'Not a pull request being (re)opened or synchronized, ignoring'
@@ -33,6 +34,17 @@ async function main (params) {
   }
   let github;
   const ow = openwhisk();
+
+  if (isMergeQueue) {
+    const res = await set_green_is_bot(ow, {
+      commit_sha: params.merge_group.head_sha,
+        org: params.repository.owner.login,
+        repo: params.repository.name,
+        start_time: (new Date()).toISOString(),
+    });
+    return res;
+  }
+
   const user = params.pull_request.user.login;
   const start_time = (new Date()).toISOString();
   const org = params.pull_request.base.repo.owner.login;
