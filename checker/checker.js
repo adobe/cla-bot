@@ -25,7 +25,7 @@ gets fired from github pr creation/update webhook.
 const valid_pr_events = ['opened', 'reopened', 'synchronize'];
 
 async function main (params) {
-  const isMergeQueue = params.merge_group && params.action === 'checks_requested;
+  const isMergeQueue = params.merge_group && params.action === 'checks_requested';
   if (!isMergeQueue && (!params.pull_request || !valid_pr_events.includes(params.action))) {
     return {
       statusCode: 202,
