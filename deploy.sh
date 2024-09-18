@@ -100,6 +100,6 @@ then
 else
     echo "Setting runtime host and auth properties..."
     $WSK property set --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-    $WSK action update "${ACTION_NAME}" --kind nodejs:10 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action update "${ACTION_NAME}" --kind nodejs:14 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi
 echo "🌈✅"
