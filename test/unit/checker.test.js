@@ -884,4 +884,39 @@ describe('checker action', function () {
       });
     });
   });
+  describe('merge queue', function () {
+    it('should pass the PR through the merge queue because the CLA would have already been found', async function () {
+      const params = {
+        merge_group: {
+          head_sha: '12345'
+        },
+        repository: {
+          owner: {
+            login: 'adobe'
+          },
+          name: 'photoshop'
+        },
+        action: 'checks_requested'
+      };
+
+      const invoke_spy = jest.fn().mockImplementationOnce((args) => {
+        return {
+          title: args.params.title
+        };
+      });
+      openWhisk.mockImplementation(() => {
+        return {
+          actions: {
+            invoke: invoke_spy
+          }
+        };
+      });
+      const response = await checker.main(params);
+      const action_invoke_args = invoke_spy.mock.calls[0][0];
+      expect(action_invoke_args.name).toBe('cla-setgithubcheck');
+      expect(action_invoke_args.params.conclusion).toBe('success');
+      expect(action_invoke_args.params.title).toContain('CLA Signed');
+      expect(response.statusCode).toBe(200);
+    });
+  });
 });

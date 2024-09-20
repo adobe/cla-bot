@@ -35,7 +35,7 @@ async function main (params) {
   const ow = openwhisk();
 
   if (isMergeQueue) {
-    const res = await set_green_is_bot(ow, {
+    const res = await set_green_has_signed_cla(ow, {
       commit_sha: params.merge_group.head_sha,
       org: params.repository.owner.login,
       repo: params.repository.name,
@@ -209,32 +209,8 @@ async function check_cla (ow, args) {
     if (usernames.map(function (item) { return item.toLowerCase(); }).includes(args.user.toLowerCase())) {
       // If the username exists in the response from the lookup action, then we
       // can render a green checkmark on the PR!
-      let check_res;
-      try {
-        check_res = await ow.actions.invoke({
-          name: utils.SETGITHUBCHECK,
-          blocking: true,
-          result: true,
-          params: {
-            installation_id: args.installation_id,
-            org: args.org,
-            repo: args.repo,
-            sha: args.commit_sha,
-            status: 'completed',
-            start_time: args.start_time,
-            conclusion: 'success',
-            title: 'CLA Signed',
-            summary: 'A Signed CLA has been found for the GitHub.com user ' + args.user
-          }
-        });
-      } catch (e) {
-        return utils.action_error(e, 'Error invoking setgithubcheck when CLA was found.');
-      }
-
-      return {
-        statusCode: 200,
-        body: check_res.title
-      };
+      const check = await set_green_has_signed_cla(ow, args);
+      return check;
     } else {
       try {
         const check = await action_required(ow, args);
@@ -340,6 +316,35 @@ If you believe this was a mistake, please report an issue at [adobe/cla-bot](htt
   } catch (e) {
     return utils.action_error(e, 'Error invoking setgithubcheck during action_required creation.');
   }
+  return {
+    statusCode: 200,
+    body: result.title
+  };
+}
+
+async function set_green_has_signed_cla (ow, args) {
+  let result;
+  try {
+    result = await ow.actions.invoke({
+      name: utils.SETGITHUBCHECK,
+      blocking: true,
+      result: true,
+      params: {
+        installation_id: args.installation_id,
+        org: args.org,
+        repo: args.repo,
+        sha: args.commit_sha,
+        status: 'completed',
+        start_time: args.start_time,
+        conclusion: 'success',
+        title: 'CLA Signed',
+        summary: 'A Signed CLA has been found for the GitHub.com user ' + args.user
+      }
+    });
+  } catch (e) {
+    return utils.action_error(e, 'Error invoking setgithubcheck when CLA was found.');
+  }
+
   return {
     statusCode: 200,
     body: result.title
