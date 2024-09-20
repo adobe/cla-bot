@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.25.1",
-    "@octokit/rest": "^21.0.2",
+    "@octokit/rest": "^20.0.0",
     "codecov": "^3.6.1",
     "cross-env": "^5.2.0",
     "eslint": "^8.0.0",
@@ -48,7 +48,7 @@
     "rewire": "^6.0.0"
   },
   "overrides": {
-    "@octokit/rest": "^21.0.2"
+    "@octokit/rest": "^20.0.0"
   },
   "packageManager": "yarn@1.22.19+sha512.ff4579ab459bb25aa7c0ff75b62acebe576f6084b36aa842971cf250a5d8c6cd3bc9420b22ce63c7f93a0857bc6ef29291db39c3e7a23aab5adfd5a4dd6c5d71"
 }

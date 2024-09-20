@@ -9,8 +9,8 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTA
 OF ANY KIND, either express or implied. See the License for the specific language
 governing permissions and limitations under the License.
 */
-const githubApp = require('../../checker/node_modules/github-app');
-jest.mock('../../checker/node_modules/github-app');
+const githubApp = require('../../node_modules/github-app');
+jest.mock('../../node_modules/github-app');
 const openWhisk = require('openwhisk');
 jest.mock('openwhisk');
 

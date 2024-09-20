@@ -10,9 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-// const utils = require('../../utils.js');
-const rewire = require('rewire');
-const webhook = rewire('../../signwebhook/signwebhook.js');
+const webhook = require('../../signwebhook/signwebhook.js');
 
 describe('signwebhook action', function () {
   describe('failure', function () {
