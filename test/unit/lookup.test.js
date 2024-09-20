@@ -11,8 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const utils = require('../../utils.js');
-const rewire = require('rewire');
-const lookup = rewire('../../lookup/lookup.js');
+const lookup = require('../../lookup/lookup.js');
 
 describe('lookup action', function () {
   describe('failure', function () {
@@ -22,28 +21,16 @@ describe('lookup action', function () {
     });
   });
   describe('happy path', function () {
-    let revert_request_mock, request_spy; // stubbing request module
-    let revert_parse_mock, parse_spy; // stubbing csv-parse module
-    let revert_access_token_mock;
     beforeEach(function () {
-      revert_access_token_mock = spyOn(utils, 'get_adobe_sign_access_token').and.returnValue(Promise.resolve({ access_token: 'gimme ze access codes!' }));
-      request_spy = jasmine.createSpy('request spy').and.callFake(function (options) {
-        if (options.url.includes('oauth/refresh')) {
-          return Promise.resolve({ access_token: 'yes' });
-        } else {
-          return Promise.resolve('this will not be used');
-        }
-      });
-      revert_request_mock = lookup.__set__('request', request_spy);
-      parse_spy = jasmine.createSpy('parse spy').and.returnValue(Promise.resolve([{ githubUsername: 'steve' }]));
-      revert_parse_mock = lookup.__set__('parse', parse_spy);
+      jest.spyOn(utils, 'get_adobe_sign_access_token').mockResolvedValue({ access_token: 'gimme ze access codes!' });
     });
+
     afterEach(function () {
-      revert_access_token_mock();
-      revert_request_mock();
-      revert_parse_mock();
+      jest.restoreAllMocks();
     });
+
     it('should be able to handle a single agreement', async function () {
+      jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, status: 200, access_token: 'yes', text: () => 'Custom Field 8\nsteve' });
       const params = {
         agreements: '12345'
       };
@@ -51,9 +38,9 @@ describe('lookup action', function () {
       expect(result.body.usernames).toContain('steve');
     });
     it('should be able to handle multiple agreements', async function () {
-      parse_spy.and.callFake(function () {
-        return Promise.resolve([{ githubUsername: 'steve' + Math.random() }]);
-      });
+      jest.spyOn(global, 'fetch')
+        .mockResolvedValueOnce({ ok: true, status: 200, access_token: 'yes', text: () => 'Custom Field 8\nsteve' })
+        .mockResolvedValueOnce({ ok: true, status: 200, access_token: 'yes', text: () => 'Custom Field 8\nmary' });
       const params = {
         agreements: ['12345', '43561']
       };

@@ -1,6 +1,11 @@
 module.exports = {
+  parser: '@babel/eslint-parser',
+  parserOptions: {
+    requireConfigFile: false
+  },
   env: {
-    node: true
+    node: true,
+    jest: true
   },
   extends: 'standard',
   rules: {

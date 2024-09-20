@@ -10,7 +10,6 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const fetch = require('node-fetch');
 const github_app = require('github-app');
 const openwhisk = require('openwhisk');
 const utils = require('../utils.js');
@@ -151,6 +150,7 @@ async function check_cla (ow, args) {
   } catch (e) {
     return utils.action_error(e, 'Error during retrieval of Adobe Sign access token.');
   }
+
   const access_token = response.access_token;
   if (!access_token) {
     return { statusCode: 500, body: 'Empty access_token retrieved from Adobe Sign.' };
@@ -174,6 +174,7 @@ async function check_cla (ow, args) {
   } catch (e) {
     return utils.action_error(e, 'Error retrieving Adobe Sign agreements.');
   }
+
   if (response.userAgreementList && response.userAgreementList.length) {
     // We found agreements containing the github username to search through.
     const agreements = response.userAgreementList.filter(function (agreement) {
@@ -203,6 +204,7 @@ async function check_cla (ow, args) {
     } catch (e) {
       return utils.action_error(e, 'Error invoking lookup action when agreements were found.');
     }
+
     const usernames = lookup_res.body.usernames;
     if (usernames.map(function (item) { return item.toLowerCase(); }).includes(args.user.toLowerCase())) {
       // If the username exists in the response from the lookup action, then we
@@ -228,6 +230,7 @@ async function check_cla (ow, args) {
       } catch (e) {
         return utils.action_error(e, 'Error invoking setgithubcheck when CLA was found.');
       }
+
       return {
         statusCode: 200,
         body: check_res.title
