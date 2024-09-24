@@ -40,7 +40,8 @@ async function main (params) {
       installation_id: params.installation.id,
       org: params.repository.owner.login,
       repo: params.repository.name,
-      start_time: (new Date()).toISOString()
+      start_time: (new Date()).toISOString(),
+      user: params.sender.login
     });
     return res;
   }
