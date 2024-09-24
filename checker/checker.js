@@ -37,6 +37,7 @@ async function main (params) {
   if (isMergeQueue) {
     const res = await set_green_has_signed_cla(ow, {
       commit_sha: params.merge_group.head_sha,
+      installation_id: params.installation.id,
       org: params.repository.owner.login,
       repo: params.repository.name,
       start_time: (new Date()).toISOString()
