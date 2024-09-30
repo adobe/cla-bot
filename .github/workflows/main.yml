@@ -1,8 +1,16 @@
-name: Test
+name: Test and Deploy
 run-name: ${{ github.actor }} is testing 🚀
 on: [push]
+
+env:
+  TEST_ONE_PAC: ${{ secrets.TEST_ONE_PAC }}
+  TEST_TWO_PAC: ${{ secrets.TEST_TWO_PAC }}
+  TEST_THREE_PAC: ${{ secrets.TEST_THREE_PAC }}
+  TEST_FOUR_PAC: ${{ secrets.TEST_FOUR_PAC }}
+  TEST_FIVE_PAC: ${{ secrets.TEST_FIVE_PAC }}
+
 jobs:
-  Explore-GitHub-Actions:
+  test-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
