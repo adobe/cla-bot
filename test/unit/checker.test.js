@@ -896,7 +896,11 @@ describe('checker action', function () {
           },
           name: 'photoshop'
         },
-        action: 'checks_requested'
+        action: 'checks_requested',
+        installation: { id: '5431' },
+        sender: {
+          login: 'hiren'
+        }
       };
 
       const invoke_spy = jest.fn().mockImplementationOnce((args) => {
