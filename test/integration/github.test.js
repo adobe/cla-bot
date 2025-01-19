@@ -143,7 +143,7 @@ describe.skip('github integration tests', () => {
     });
     // use only on this test first
     it('should approve a pull request to an adobe repo', async () => {
-      let userdata = await github.rest.rateLimit.get();
+      const userdata = await github.rest.rateLimit.get();
       console.log(userdata.data.resources.core);
       const setup = createBranch(github, user, ADOBE_REPO, newBranch);
       await setup();
