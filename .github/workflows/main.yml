@@ -23,4 +23,6 @@ jobs:
       - run: npm run lint
       - run: npm run test:unit
       - run: npm run report-coverage
+      - run: bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
+      # - run: npm run test:integration, add this back later
       - run: echo "🍏 This job's status is ${{ job.status }}."

@@ -92,7 +92,10 @@ async function waitForCheck (github, owner, repo, ref) {
   return checks.check_suites.find(findStagingBot);
 }
 
-describe('github integration tests', () => {
+// integration tests not working yet, partially due to github blocking the accounts as bots
+// partially due to not being able to see all logs associated with the checks for debugging
+// I have temp support for adobetester1, not sure about the rest
+describe.skip('github integration tests', () => {
   describe('pull requests from user with no signed cla nor member of any org (account adobetester4)', () => {
     const user = 'adobetester4';
     const newBranch = '' + new Date().valueOf();
@@ -138,7 +141,10 @@ describe('github integration tests', () => {
     const github = new Octokit({
       auth: process.env.TEST_ONE_PAC
     });
-    it.only('should approve a pull request to an adobe repo', async () => {
+    // use only on this test first
+    it('should approve a pull request to an adobe repo', async () => {
+      let userdata = await github.rest.rateLimit.get();
+      console.log(userdata.data.resources.core);
       const setup = createBranch(github, user, ADOBE_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to adobe/${ADOBE_REPO}...`);
