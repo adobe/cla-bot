@@ -1,13 +1,9 @@
-name: Test and Deploy
-run-name: ${{ github.actor }} is testing 🚀
-on: [push]
-
-env:
-  TEST_ONE_PAC: ${{ secrets.TEST_ONE_PAC }}
-  TEST_TWO_PAC: ${{ secrets.TEST_TWO_PAC }}
-  TEST_THREE_PAC: ${{ secrets.TEST_THREE_PAC }}
-  TEST_FOUR_PAC: ${{ secrets.TEST_FOUR_PAC }}
-  TEST_FIVE_PAC: ${{ secrets.TEST_FIVE_PAC }}
+name: Deploy prod
+run-name: ${{ github.actor }} is deploying 🚀
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   test-and-deploy:
@@ -22,6 +18,6 @@ jobs:
       - run: curl -L https://github.com/apache/incubator-openwhisk-cli/releases/download/latest/OpenWhisk_CLI-latest-linux-amd64.tgz | tar xz -C ~/.local/bin
       - run: npm run lint
       - run: npm run test:coverage
-      - run: bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
+      - run: bash deploy.sh lookup production && bash deploy.sh setgithubcheck production && bash deploy.sh checker production && bash deploy.sh signwebhook production
       # - run: npm run test:integration, add this back later
       - run: echo "🍏 This job's status is ${{ job.status }}."
