@@ -22,15 +22,15 @@ module.exports = {
     let config;
     if (fs.existsSync(config_path)) {
       config = require(config_path);
-    } else if (process.env.SIGN_REFRESH_TOKEN && process.env.SIGN_CLIENT_ID && process.env.SIGN_CLIENT_SECRET && process.env.GITHUB_KEY && process.env.GITHUB_APP_ID) {
+    } else if (process.env.SIGN_REFRESH_TOKEN && process.env.SIGN_CLIENT_ID && process.env.SIGN_CLIENT_SECRET && process.env.APP_KEY_GITHUB && process.env.APP_ID_GITHUB) {
       config = {
         signRefreshToken: process.env.SIGN_REFRESH_TOKEN,
         signClientID: process.env.SIGN_CLIENT_ID,
         signClientSecret: process.env.SIGN_CLIENT_SECRET,
-        githubKey: process.env.GITHUB_KEY,
-        githubAppId: process.env.GITHUB_APP_ID
+        githubKey: process.env.APP_KEY_GITHUB,
+        githubAppId: process.env.APP_ID_GITHUB
       };
-    } else if (process.env.NODE_ENV === 'test' || (process.env.TRAVIS_PULL_REQUEST && process.env.TRAVIS_PULL_REQUEST.length)) {
+    } else if (process.env.NODE_ENV === 'test') {
       config = {};
     } else {
       throw new Error('no config file nor environment variables exist for populating configuration');
