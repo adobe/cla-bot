@@ -19,6 +19,14 @@ then
     ENV="stage"
 fi
 echo "$WHATEVER"
+cat > dist/something.txt <<EOF
+{
+  "action": "$ACTION",
+  "env": "$ENV",
+  "whatever": "$WHATEVER"
+}
+EOF
+cat dist/something.txt
 
 # make sure we have all our credentials sorted
 if [ -e "${ACTION}/config.json" ]
