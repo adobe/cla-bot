@@ -18,6 +18,8 @@ if [ -z "${ENV}" ]
 then
     ENV="stage"
 fi
+echo $ENV
+echo $GITHUB_APP_ID
 
 # make sure we have all our credentials sorted
 if [ -e "${ACTION}/config.json" ]
