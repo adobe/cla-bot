@@ -15,7 +15,7 @@ env:
 jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
-    environment: Stage
+    environment: stage
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
