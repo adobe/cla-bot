@@ -26,6 +26,14 @@ jobs:
       - run: curl -L https://github.com/apache/incubator-openwhisk-cli/releases/download/latest/OpenWhisk_CLI-latest-linux-amd64.tgz | tar xz -C ~/.local/bin
       - run: npm run lint
       - run: npm run test:coverage
-      - run: bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
+      - shell:
+        env:
+          SIGN_REFRESH_TOKEN: ${{ secrets.SIGN_REFRESH_TOKEN }}
+          SIGN_CLIENT_ID: ${{ secrets.SIGN_CLIENT_ID }}
+          SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}
+          APP_KEY_GITHUB: ${{ secrets.APP_KEY_GITHUB }}
+          APP_ID_GITHUB: ${{ secrets.APP_ID_GITHUB }}
+        run: |
+          bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
       # - run: npm run test:integration, add this back later
       - run: echo "🍏 This job's status is ${{ job.status }}."
