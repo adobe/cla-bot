@@ -11,6 +11,7 @@ env:
   SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}
   APP_KEY_GITHUB: ${{ secrets.APP_KEY_GITHUB }}
   APP_ID_GITHUB: ${{ secrets.APP_ID_GITHUB }}
+  WHATEVER: ${{ secrets.WHATEVER }}
 
 jobs:
   test-and-deploy:
@@ -33,7 +34,7 @@ jobs:
           SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}
           APP_KEY_GITHUB: ${{ secrets.APP_KEY_GITHUB }}
           APP_ID_GITHUB: ${{ secrets.APP_ID_GITHUB }}
-          WHATEVER: "whatever"
+          WHATEVER: ${{ secrets.WHATEVER }}
         run: |
           echo "$WHATEVER"
           bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
