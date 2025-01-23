@@ -36,20 +36,13 @@ then
   "signRefreshToken": "$SIGN_REFRESH_TOKEN",
   "signClientID": "$SIGN_CLIENT_ID",
   "signClientSecret": "$SIGN_CLIENT_SECRET",
-  "githubKey": "$GITHUB_KEY",
-  "githubAppId": "$GITHUB_APP_ID"
+  "githubKey": "$APP_KEY_GITHUB",
+  "githubAppId": "$APP_ID_GITHUB"
 }
 EOF
 else
     echo "No config.json nor appropriate environment variables found, bombing 💥"
     exit 1
-fi
-# if we are deploying to stage and staging github app creds are provided as env
-# vars, overwrite creds in config
-if [[ "$ENV" = "stage" ]] && [ ! -z "${GITHUB_STAGING_APP_ID}" ] && [ ! -z "${GITHUB_STAGING_KEY}" ]
-then
-    echo "Overwriting GitHub App credentials to staging values provided to environment..."
-    node -e "cfg=require('./dist/config.json');cfg.githubKey='${GITHUB_STAGING_KEY}';cfg.githubAppId='${GITHUB_STAGING_APP_ID}';require('fs').writeFileSync('./dist/config.json',JSON.stringify(cfg, null, 2))"
 fi
 
 # set up action names based on environment

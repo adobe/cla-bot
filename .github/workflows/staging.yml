@@ -5,16 +5,10 @@ on:
     branches-ignore:
       - master
 
-env:
-  TEST_ONE_PAC: ${{ secrets.TEST_ONE_PAC }}
-  TEST_TWO_PAC: ${{ secrets.TEST_TWO_PAC }}
-  TEST_THREE_PAC: ${{ secrets.TEST_THREE_PAC }}
-  TEST_FOUR_PAC: ${{ secrets.TEST_FOUR_PAC }}
-  TEST_FIVE_PAC: ${{ secrets.TEST_FIVE_PAC }}
-
 jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
+    environment: Stage
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,5 +20,11 @@ jobs:
       - run: npm run lint
       - run: npm run test:coverage
       - run: bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
+        env:
+          SIGN_REFRESH_TOKEN: ${{ secrets.SIGN_REFRESH_TOKEN }}
+          SIGN_CLIENT_ID: ${{ secrets.SIGN_CLIENT_ID }}
+          SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}
+          APP_KEY_GITHUB: ${{ secrets.APP_KEY_GITHUB }}
+          APP_ID_GITHUB: ${{ secrets.APP_ID_GITHUB }}
       # - run: npm run test:integration, add this back later
       - run: echo "🍏 This job's status is ${{ job.status }}."

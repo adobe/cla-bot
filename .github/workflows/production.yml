@@ -8,6 +8,7 @@ on:
 jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
+    environment: Production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,5 +20,11 @@ jobs:
       - run: npm run lint
       - run: npm run test:coverage
       - run: bash deploy.sh lookup production && bash deploy.sh setgithubcheck production && bash deploy.sh checker production && bash deploy.sh signwebhook production
+        env:
+          SIGN_REFRESH_TOKEN: ${{ secrets.SIGN_REFRESH_TOKEN }}
+          SIGN_CLIENT_ID: ${{ secrets.SIGN_CLIENT_ID }}
+          SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}
+          APP_KEY_GITHUB: ${{ secrets.APP_KEY_GITHUB }}
+          APP_ID_GITHUB: ${{ secrets.APP_ID_GITHUB }}
       # - run: npm run test:integration, add this back later
       - run: echo "🍏 This job's status is ${{ job.status }}."
