@@ -18,6 +18,7 @@ if [ -z "${ENV}" ]
 then
     ENV="stage"
 fi
+echo "$WHATEVER"
 
 # make sure we have all our credentials sorted
 if [ -e "${ACTION}/config.json" ]

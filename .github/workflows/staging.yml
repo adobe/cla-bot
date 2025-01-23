@@ -33,7 +33,9 @@ jobs:
           SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}
           APP_KEY_GITHUB: ${{ secrets.APP_KEY_GITHUB }}
           APP_ID_GITHUB: ${{ secrets.APP_ID_GITHUB }}
+          WHATEVER: "whatever"
         run: |
+          echo "$WHATEVER"
           bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
       # - run: npm run test:integration, add this back later
       - run: echo "🍏 This job's status is ${{ job.status }}."
