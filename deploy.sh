@@ -57,19 +57,21 @@ rm dist/*.bak
 # get the config file
 if [[ $ENV = "stage" ]]
 then
-    $WSK action get cla-checker-stage --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action get "${ACTION}-stage" --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 else
-    $WSK action get cla-checker --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action get $ACTION --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi
-ls .
-cat cla-checker/config.json > dist/config.json
+mkdir previous
+unzip "${ACTION}.zip" -d previous
+cp previous/config.json dist/.
+rm -rf "${ACTION}.zip"
 
-# pushd dist
-# echo "dist/ content listing:"
-# ls -al
-# echo "Zipping dist/..."
-# zip -q -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
-# popd
+pushd dist
+echo "dist/ content listing:"
+ls -al
+echo "Zipping dist/..."
+zip -q -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
+popd
 # echo "Deploying ${ACTION_NAME}..."
 # if [ -e ~/.wskprops ]
 # then
