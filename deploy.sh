@@ -28,32 +28,6 @@ cat > dist/something.txt <<EOF
 EOF
 cat dist/something.txt
 
-# make sure we have all our credentials sorted
-if [ -e "${ACTION}/config.json" ]
-then
-    echo "Using config.json from $ACTION/ dir"
-    cp "${ACTION}/config.json" dist/config.json
-elif [ -e config.json ]
-then
-    echo "Using config.json from root dir"
-    cp config.json dist/config.json
-elif [ ! -z "${GITHUB_APP_ID}" ] && [ ! -z "${GITHUB_KEY}" ] && [ ! -z "${SIGN_CLIENT_ID}" ] && [ ! -z "${SIGN_CLIENT_SECRET}" ] && [ ! -z "${SIGN_REFRESH_TOKEN}" ]
-then
-    echo "Using config from environment variables"
-    cat > dist/config.json <<EOF
-{
-  "signRefreshToken": "$SIGN_REFRESH_TOKEN",
-  "signClientID": "$SIGN_CLIENT_ID",
-  "signClientSecret": "$SIGN_CLIENT_SECRET",
-  "githubKey": "$APP_KEY_GITHUB",
-  "githubAppId": "$APP_ID_GITHUB"
-}
-EOF
-else
-    echo "No config.json nor appropriate environment variables found, bombing 💥"
-    exit 1
-fi
-
 # set up action names based on environment
 ACTION_NAME="cla-${ACTION}"
 if [[ "$ENV" = "stage" ]]
@@ -89,19 +63,29 @@ then
 fi
 rm dist/*.bak
 
-pushd dist
-echo "dist/ content listing:"
-ls -al
-echo "Zipping dist/..."
-zip -q -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
-popd
-echo "Deploying ${ACTION_NAME}..."
-if [ -e ~/.wskprops ]
+# get the config file
+if [[ $ENV = "stage" ]]
 then
-    $WSK action update "${ACTION_NAME}" --kind nodejs:10 "dist/${ACTION}.zip" --web true
+    $WSK action get cla-checker-stage --save
 else
-    echo "Setting runtime host and auth properties..."
-    $WSK property set --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-    $WSK action update "${ACTION_NAME}" --kind nodejs:14 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action get cla-checker --save
 fi
+ls .
+cat cla-checker/config.json > dist/config.json
+
+# pushd dist
+# echo "dist/ content listing:"
+# ls -al
+# echo "Zipping dist/..."
+# zip -q -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
+# popd
+# echo "Deploying ${ACTION_NAME}..."
+# if [ -e ~/.wskprops ]
+# then
+#     $WSK action update "${ACTION_NAME}" --kind nodejs:18 "dist/${ACTION}.zip" --web true
+# else
+#     echo "Setting runtime host and auth properties..."
+#     $WSK property set --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+#     $WSK action update "${ACTION_NAME}" --kind nodejs:18 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+# fi
 echo "🌈✅"
