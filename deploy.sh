@@ -57,14 +57,14 @@ rm dist/*.bak
 # get the config file
 if [[ $ENV = "stage" ]]
 then
-    $WSK action get "${ACTION}-stage" --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action get "${ACTION_NAME}-stage" --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 else
-    $WSK action get $ACTION --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action get $ACTION_NAME --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi
 mkdir previous
-unzip "${ACTION}.zip" -d previous
+unzip "${ACTION_NAME}.zip" -d previous
 cp previous/config.json dist/.
-rm -rf "${ACTION}.zip"
+rm -rf "${ACTION_NAME}.zip"
 
 pushd dist
 echo "dist/ content listing:"
