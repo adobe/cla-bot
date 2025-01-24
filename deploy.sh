@@ -67,13 +67,13 @@ ls -al
 echo "Zipping dist/..."
 zip -q -r "${ACTION}.zip" "${ACTION}.js" utils.js config.json package.json node_modules
 popd
-# echo "Deploying ${ACTION_NAME}..."
-# if [ -e ~/.wskprops ]
-# then
-#     $WSK action update "${ACTION_NAME}" --kind nodejs:18 "dist/${ACTION}.zip" --web true
-# else
-#     echo "Setting runtime host and auth properties..."
-#     $WSK property set --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-#     $WSK action update "${ACTION_NAME}" --kind nodejs:18 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-# fi
+echo "Deploying ${ACTION_NAME}..."
+if [ -e ~/.wskprops ]
+then
+    $WSK action update "${ACTION_NAME}" --kind nodejs:18 "dist/${ACTION}.zip" --web true
+else
+    echo "Setting runtime host and auth properties..."
+    $WSK property set --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action update "${ACTION_NAME}" --kind nodejs:18 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+fi
 echo "🌈✅"
