@@ -5,14 +5,6 @@ on:
     branches-ignore:
       - master
 
-env:
-  SIGN_REFRESH_TOKEN: ${{ secrets.SIGN_REFRESH_TOKEN }}
-  SIGN_CLIENT_ID: ${{ secrets.SIGN_CLIENT_ID }}
-  SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}
-  APP_KEY_GITHUB: ${{ secrets.APP_KEY_GITHUB }}
-  APP_ID_GITHUB: ${{ secrets.APP_ID_GITHUB }}
-  WHATEVER: ${{ secrets.WHATEVER }}
-
 jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
@@ -29,14 +21,8 @@ jobs:
       - run: npm run test:coverage
       - shell: bash
         env:
-          SIGN_REFRESH_TOKEN: ${{ secrets.SIGN_REFRESH_TOKEN }}
-          SIGN_CLIENT_ID: ${{ secrets.SIGN_CLIENT_ID }}
-          SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}
-          APP_KEY_GITHUB: ${{ secrets.APP_KEY_GITHUB }}
-          APP_ID_GITHUB: ${{ secrets.APP_ID_GITHUB }}
-          WHATEVER: ${{ secrets.WHATEVER }}
+          ADOBE_RUNTIME_AUTH: ${{ secrets.ADOBE_RUNTIME_AUTH }}
         run: |
-          echo "$WHATEVER"
           bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
       # - run: npm run test:integration, add this back later
       - run: echo "🍏 This job's status is ${{ job.status }}."

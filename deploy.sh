@@ -18,15 +18,6 @@ if [ -z "${ENV}" ]
 then
     ENV="stage"
 fi
-echo "$WHATEVER"
-cat > dist/something.txt <<EOF
-{
-  "action": "$ACTION",
-  "env": "$ENV",
-  "whatever": "$WHATEVER"
-}
-EOF
-cat dist/something.txt
 
 # set up action names based on environment
 ACTION_NAME="cla-${ACTION}"
@@ -66,9 +57,9 @@ rm dist/*.bak
 # get the config file
 if [[ $ENV = "stage" ]]
 then
-    $WSK action get cla-checker-stage --save
+    $WSK action get cla-checker-stage --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 else
-    $WSK action get cla-checker --save
+    $WSK action get cla-checker --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi
 ls .
 cat cla-checker/config.json > dist/config.json
