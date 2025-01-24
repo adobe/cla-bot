@@ -54,13 +54,8 @@ then
 fi
 rm dist/*.bak
 
-# get the config file
-if [[ $ENV = "stage" ]]
-then
-    $WSK action get "${ACTION_NAME}-stage" --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-else
-    $WSK action get $ACTION_NAME --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-fi
+# get the config file and repackage to redeploy
+$WSK action get "${ACTION_NAME}" --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 mkdir previous
 unzip "${ACTION_NAME}.zip" -d previous
 cp previous/config.json dist/.
