@@ -57,7 +57,7 @@ rm dist/*.bak
 # get the config file and repackage to redeploy
 $WSK action get "${ACTION_NAME}" --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 mkdir previous
-unzip "${ACTION_NAME}.zip" -d previous
+unzip "${ACTION_NAME}.zip" -q -d previous
 cp previous/config.json dist/.
 rm -rf "${ACTION_NAME}.zip"
 
