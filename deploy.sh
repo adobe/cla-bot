@@ -59,7 +59,7 @@ $WSK action get "${ACTION_NAME}" --save --apihost adobeioruntime.net --auth "${A
 mkdir previous
 unzip "${ACTION_NAME}.zip" -q -d previous
 cp previous/config.json dist/.
-rm -rf "${ACTION_NAME}.zip"
+rm -rf "${ACTION_NAME}.zip" previous/
 
 pushd dist
 echo "dist/ content listing:"
