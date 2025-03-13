@@ -19,39 +19,6 @@ then
     ENV="stage"
 fi
 
-# make sure we have all our credentials sorted
-if [ -e "${ACTION}/config.json" ]
-then
-    echo "Using config.json from $ACTION/ dir"
-    cp "${ACTION}/config.json" dist/config.json
-elif [ -e config.json ]
-then
-    echo "Using config.json from root dir"
-    cp config.json dist/config.json
-elif [ ! -z "${GITHUB_APP_ID}" ] && [ ! -z "${GITHUB_KEY}" ] && [ ! -z "${SIGN_CLIENT_ID}" ] && [ ! -z "${SIGN_CLIENT_SECRET}" ] && [ ! -z "${SIGN_REFRESH_TOKEN}" ]
-then
-    echo "Using config from environment variables"
-    cat > dist/config.json <<EOF
-{
-  "signRefreshToken": "$SIGN_REFRESH_TOKEN",
-  "signClientID": "$SIGN_CLIENT_ID",
-  "signClientSecret": "$SIGN_CLIENT_SECRET",
-  "githubKey": "$GITHUB_KEY",
-  "githubAppId": "$GITHUB_APP_ID"
-}
-EOF
-else
-    echo "No config.json nor appropriate environment variables found, bombing 💥"
-    exit 1
-fi
-# if we are deploying to stage and staging github app creds are provided as env
-# vars, overwrite creds in config
-if [[ "$ENV" = "stage" ]] && [ ! -z "${GITHUB_STAGING_APP_ID}" ] && [ ! -z "${GITHUB_STAGING_KEY}" ]
-then
-    echo "Overwriting GitHub App credentials to staging values provided to environment..."
-    node -e "cfg=require('./dist/config.json');cfg.githubKey='${GITHUB_STAGING_KEY}';cfg.githubAppId='${GITHUB_STAGING_APP_ID}';require('fs').writeFileSync('./dist/config.json',JSON.stringify(cfg, null, 2))"
-fi
-
 # set up action names based on environment
 ACTION_NAME="cla-${ACTION}"
 if [[ "$ENV" = "stage" ]]
@@ -87,6 +54,13 @@ then
 fi
 rm dist/*.bak
 
+# get the config file and repackage to redeploy
+$WSK action get "${ACTION_NAME}" --save --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+mkdir previous
+unzip "${ACTION_NAME}.zip" -q -d previous
+cp previous/config.json dist/.
+rm -rf "${ACTION_NAME}.zip" previous/
+
 pushd dist
 echo "dist/ content listing:"
 ls -al
@@ -96,10 +70,10 @@ popd
 echo "Deploying ${ACTION_NAME}..."
 if [ -e ~/.wskprops ]
 then
-    $WSK action update "${ACTION_NAME}" --kind nodejs:10 "dist/${ACTION}.zip" --web true
+    $WSK action update "${ACTION_NAME}" --kind nodejs:18 "dist/${ACTION}.zip" --web true
 else
     echo "Setting runtime host and auth properties..."
     $WSK property set --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
-    $WSK action update "${ACTION_NAME}" --kind nodejs:10 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
+    $WSK action update "${ACTION_NAME}" --kind nodejs:18 "dist/${ACTION}.zip" --web true --apihost adobeioruntime.net --auth "${ADOBE_RUNTIME_AUTH}"
 fi
 echo "🌈✅"

@@ -10,25 +10,25 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const Octokit = require('@octokit/rest');
+const { Octokit } = require('@octokit/rest');
 
 if (!process.env.TEST_ONE_PAC) throw new Error('environment variable `TEST_ONE_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
 if (!process.env.TEST_TWO_PAC) throw new Error('environment variable `TEST_TWO_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
-if (!process.env.TEST_FOUR_PAC) throw new Error('environment variable `TEST_FOUR_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
-if (!process.env.TEST_MAJ_PAC) throw new Error('environment variable `TEST_MAJ_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
-if (!process.env.TEST_MAJ583_PAC) throw new Error('environment variable `TEST_MAJ583_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
+if (!process.env.TEST_THREE_PAC) throw new Error('environment variable `TEST_THREE_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
+// if (!process.env.TEST_FOUR_PAC) throw new Error('environment variable `TEST_FOUR_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
+// if (!process.env.TEST_FIVE_PAC) throw new Error('environment variable `TEST_FIVE_PAC` not present, aborting. This is required for integration tests against GitHub.com.');
 /*
  * description of what the github.com personal access tokens above represent:
- * - TEST_ONE_PAC: PAC for account adobeiotest1. Adobe ICLA signed. not a member
+ * - TEST_ONE_PAC: PAC for account adobetester1. Adobe ICLA signed. not a member
  *   of any orgs.
- * - TEST_TWO_PAC: PAC for account adobeiotest2. Adobe CCLA signed. not a member
+ * - TEST_TWO_PAC: PAC for account adobetester2. Adobe CCLA signed. not a member
  *   of any orgs.
- * - TEST_FOUR_PAC: PAC for account adobeiotest4. Adobe CCLA signed. member of
+ * - TEST_THREE_PAC: PAC for account adobetester3. Adobe CCLA signed. member of
  *   the adobe org and magento org (and part of magento-employees team).
- * - TEST_MAJ_PAC: PAC for account majtest. no CLA signed. not a member of any
+ * - TEST_Four_PAC: PAC for account adobetester4. no CLA signed. not a member of any
  *   orgs. added as a _collaborator_ on magento/devops-cla-test and
  *   magento/devops-cla-test-adcb
- * - TEST_MAJ583_PAC: PAC for account majtest583. no CLA signed. member of
+ * - TEST_FIVE_PAC: PAC for account adobetester5. no CLA signed. member of
  *   magento and the community-contributors team.
  */
 
@@ -40,21 +40,21 @@ function createBranch (github, user, repo, newBranch) {
   return async function () {
     console.log('\n[setup]');
     console.log(`Getting ${user}/${repo} HEAD reference...`);
-    const headRef = await github.git.getRef({
+    const headRef = await github.rest.git.getRef({
       owner: user,
       repo,
       ref: 'heads/master'
     });
     const headSha = headRef.data.object.sha;
     console.log(`Creating branch ${newBranch} on ${user}/${repo}...`);
-    await github.git.createRef({
+    await github.rest.git.createRef({
       owner: user,
       repo,
       ref: `refs/heads/${newBranch}`,
       sha: headSha
     });
     console.log(`Creating file on branch ${newBranch} on ${user}/${repo}...`);
-    await github.repos.createOrUpdateFile({
+    await github.rest.repos.createOrUpdateFileContents({
       owner: user,
       repo,
       path: `${newBranch}.md`,
@@ -92,14 +92,15 @@ async function waitForCheck (github, owner, repo, ref) {
   return checks.check_suites.find(findStagingBot);
 }
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
-
-describe('github integration tests', () => {
-  describe('pull requests from user with no signed cla nor member of any org (account majtest)', () => {
-    const user = 'majtest';
+// integration tests not working yet, partially due to github blocking the accounts as bots
+// partially due to not being able to see all logs associated with the checks for debugging
+// I have temp support for adobetester1, not sure about the rest
+describe.skip('github integration tests', () => {
+  describe('pull requests from user with no signed cla nor member of any org (account adobetester4)', () => {
+    const user = 'adobetester4';
     const newBranch = '' + new Date().valueOf();
     const github = new Octokit({
-      auth: process.env.TEST_MAJ_PAC
+      auth: process.env.TEST_FOUR_PAC
     });
     it('should deny a pull request to an adobe repo', async () => {
       const setup = createBranch(github, user, ADOBE_REPO, newBranch);
@@ -135,16 +136,19 @@ describe('github integration tests', () => {
     });
   });
   describe('pull requests from user with a signed Adobe ICLA (account adobeiotest1)', () => {
-    const user = 'adobeiotest1';
+    const user = 'adobetester1';
     const newBranch = '' + new Date().valueOf();
     const github = new Octokit({
       auth: process.env.TEST_ONE_PAC
     });
+    // use only on this test first
     it('should approve a pull request to an adobe repo', async () => {
+      const userdata = await github.rest.rateLimit.get();
+      console.log(userdata.data.resources.core);
       const setup = createBranch(github, user, ADOBE_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to adobe/${ADOBE_REPO}...`);
-      const pr = await github.pulls.create({
+      const pr = await github.rest.pulls.create({
         owner: 'adobe',
         repo: ADOBE_REPO,
         title: `testing build ${newBranch}`,
@@ -160,7 +164,7 @@ describe('github integration tests', () => {
       const setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);
       await setup();
       console.log(`Creating pull request to magento/${PUBLIC_MAGENTO_REPO}...`);
-      const pr = await github.pulls.create({
+      const pr = await github.rest.pulls.create({
         owner: 'magento',
         repo: PUBLIC_MAGENTO_REPO,
         title: `testing build ${newBranch}`,
@@ -212,11 +216,11 @@ describe('github integration tests', () => {
       await teardown();
     });
   });
-  describe('pull requests from a user who is a member of the magento org but not the magento-employees team and with no signed CLAs (account MajTest583)', () => {
-    const user = 'MajTest583';
+  describe('pull requests from a user who is a member of the magento org but not the magento-employees team and with no signed CLAs (account adobetester5)', () => {
+    const user = 'adobetester5';
     const newBranch = '' + new Date().valueOf();
     const github = new Octokit({
-      auth: process.env.TEST_MAJ583_PAC
+      auth: process.env.TEST_FIVE_PAC
     });
     it('should deny a pull request to a public magento repo', async () => {
       const setup = createBranch(github, user, PUBLIC_MAGENTO_REPO, newBranch);

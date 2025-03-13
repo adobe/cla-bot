@@ -10,9 +10,6 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-/*
-const request = require('request-promise-native');
-*/
 const utils = require('../utils.js');
 const config = utils.get_config();
 const openwhisk = require('openwhisk');

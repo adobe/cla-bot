@@ -10,7 +10,6 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const fetch = require('node-fetch');
 const BASE = 'https://adobeioruntime.net/api/v1/web/io-solutions/default';
 
 describe('HTTP integration tests', () => {

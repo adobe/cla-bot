@@ -1,0 +1,28 @@
+name: Test and Deploy
+run-name: ${{ github.actor }} is testing 🚀
+on:
+  push:
+    branches-ignore:
+      - master
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    environment: stage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: mkdir -p ~/.local/bin
+      - run: curl -L https://github.com/apache/incubator-openwhisk-cli/releases/download/latest/OpenWhisk_CLI-latest-linux-amd64.tgz | tar xz -C ~/.local/bin
+      - run: npm run lint
+      - run: npm run test:coverage
+      - shell: bash
+        env:
+          ADOBE_RUNTIME_AUTH: ${{ secrets.ADOBE_RUNTIME_AUTH }}
+        run: |
+          bash deploy.sh lookup && bash deploy.sh setgithubcheck && bash deploy.sh checker && bash deploy.sh signwebhook
+      # - run: npm run test:integration, add this back later
+      - run: echo "🍏 This job's status is ${{ job.status }}."

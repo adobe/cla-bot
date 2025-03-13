@@ -9,7 +9,6 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTA
 OF ANY KIND, either express or implied. See the License for the specific language
 governing permissions and limitations under the License.
 */
-const request = require('request-promise-native');
 
 module.exports = {
   CHECKER: 'cla-checker',
@@ -23,15 +22,15 @@ module.exports = {
     let config;
     if (fs.existsSync(config_path)) {
       config = require(config_path);
-    } else if (process.env.SIGN_REFRESH_TOKEN && process.env.SIGN_CLIENT_ID && process.env.SIGN_CLIENT_SECRET && process.env.GITHUB_KEY && process.env.GITHUB_APP_ID) {
+    } else if (process.env.SIGN_REFRESH_TOKEN && process.env.SIGN_CLIENT_ID && process.env.SIGN_CLIENT_SECRET && process.env.APP_KEY_GITHUB && process.env.APP_ID_GITHUB) {
       config = {
         signRefreshToken: process.env.SIGN_REFRESH_TOKEN,
         signClientID: process.env.SIGN_CLIENT_ID,
         signClientSecret: process.env.SIGN_CLIENT_SECRET,
-        githubKey: process.env.GITHUB_KEY,
-        githubAppId: process.env.GITHUB_APP_ID
+        githubKey: process.env.APP_KEY_GITHUB,
+        githubAppId: process.env.APP_ID_GITHUB
       };
-    } else if (process.env.NODE_ENV === 'test' || (process.env.TRAVIS_PULL_REQUEST && process.env.TRAVIS_PULL_REQUEST.length)) {
+    } else if (process.env.NODE_ENV === 'test') {
       config = {};
     } else {
       throw new Error('no config file nor environment variables exist for populating configuration');
@@ -39,22 +38,26 @@ module.exports = {
     return config;
   },
   get_adobe_sign_access_token: async function (config) {
-    const options = {
-      json: true,
+    const fetchResponse = await fetch('https://api.na2.echosign.com/oauth/refresh', {
       method: 'POST',
-      url: 'https://api.na2.echosign.com/oauth/refresh',
       headers: {
         'cache-control': 'no-cache',
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      form: {
+      body: new URLSearchParams({
         client_id: config.signClientID,
         client_secret: config.signClientSecret,
         grant_type: 'refresh_token',
         refresh_token: config.signRefreshToken
-      }
-    };
-    const response = await request(options);
+      })
+    });
+
+    if (!fetchResponse.ok) {
+      throw new Error(`Error: ${fetchResponse.status} - ${fetchResponse.statusText}`);
+    }
+
+    const response = await fetchResponse.json();
+
     return response;
   },
   action_error: function (e, msg) {

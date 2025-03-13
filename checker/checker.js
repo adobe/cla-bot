@@ -10,7 +10,6 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const request = require('request-promise-native');
 const github_app = require('github-app');
 const openwhisk = require('openwhisk');
 const utils = require('../utils.js');
@@ -25,7 +24,8 @@ gets fired from github pr creation/update webhook.
 const valid_pr_events = ['opened', 'reopened', 'synchronize'];
 
 async function main (params) {
-  if (!params.pull_request || !valid_pr_events.includes(params.action)) {
+  const isMergeQueue = params.merge_group && params.action === 'checks_requested';
+  if (!isMergeQueue && (!params.pull_request || !valid_pr_events.includes(params.action))) {
     return {
       statusCode: 202,
       body: 'Not a pull request being (re)opened or synchronized, ignoring'
@@ -33,6 +33,19 @@ async function main (params) {
   }
   let github;
   const ow = openwhisk();
+
+  if (isMergeQueue) {
+    const res = await set_green_has_signed_cla(ow, {
+      commit_sha: params.merge_group.head_sha,
+      installation_id: params.installation.id,
+      org: params.repository.owner.login,
+      repo: params.repository.name,
+      start_time: (new Date()).toISOString(),
+      user: params.sender.login
+    });
+    return res;
+  }
+
   const user = params.pull_request.user.login;
   const start_time = (new Date()).toISOString();
   const org = params.pull_request.base.repo.owner.login;
@@ -139,29 +152,31 @@ async function check_cla (ow, args) {
   } catch (e) {
     return utils.action_error(e, 'Error during retrieval of Adobe Sign access token.');
   }
+
   const access_token = response.access_token;
   if (!access_token) {
     return { statusCode: 500, body: 'Empty access_token retrieved from Adobe Sign.' };
   }
 
   // Next we look up signed agreements containing the author's github username in Adobe Sign
-  const options = {
-    method: 'GET',
-    url: 'https://api.na1.echosign.com:443/api/rest/v5/agreements',
-    qs: {
-      query: args.user
-    },
-    headers: {
-      'cache-control': 'no-cache',
-      'Access-Token': access_token
-    },
-    json: true
-  };
   try {
-    response = await request(options);
+    const fetchResponse = await fetch(`https://api.na1.echosign.com:443/api/rest/v5/agreements?query=${args.user}`, {
+      method: 'GET',
+      headers: {
+        'cache-control': 'no-cache',
+        'Access-Token': access_token
+      }
+    });
+
+    if (!fetchResponse.ok) {
+      return utils.action_error(new Error('Failed to fetch'), 'Error retrieving Adobe Sign agreements.');
+    }
+
+    response = await fetchResponse.json();
   } catch (e) {
     return utils.action_error(e, 'Error retrieving Adobe Sign agreements.');
   }
+
   if (response.userAgreementList && response.userAgreementList.length) {
     // We found agreements containing the github username to search through.
     const agreements = response.userAgreementList.filter(function (agreement) {
@@ -191,35 +206,13 @@ async function check_cla (ow, args) {
     } catch (e) {
       return utils.action_error(e, 'Error invoking lookup action when agreements were found.');
     }
+
     const usernames = lookup_res.body.usernames;
     if (usernames.map(function (item) { return item.toLowerCase(); }).includes(args.user.toLowerCase())) {
       // If the username exists in the response from the lookup action, then we
       // can render a green checkmark on the PR!
-      let check_res;
-      try {
-        check_res = await ow.actions.invoke({
-          name: utils.SETGITHUBCHECK,
-          blocking: true,
-          result: true,
-          params: {
-            installation_id: args.installation_id,
-            org: args.org,
-            repo: args.repo,
-            sha: args.commit_sha,
-            status: 'completed',
-            start_time: args.start_time,
-            conclusion: 'success',
-            title: 'CLA Signed',
-            summary: 'A Signed CLA has been found for the GitHub.com user ' + args.user
-          }
-        });
-      } catch (e) {
-        return utils.action_error(e, 'Error invoking setgithubcheck when CLA was found.');
-      }
-      return {
-        statusCode: 200,
-        body: check_res.title
-      };
+      const check = await set_green_has_signed_cla(ow, args);
+      return check;
     } else {
       try {
         const check = await action_required(ow, args);
@@ -325,6 +318,35 @@ If you believe this was a mistake, please report an issue at [adobe/cla-bot](htt
   } catch (e) {
     return utils.action_error(e, 'Error invoking setgithubcheck during action_required creation.');
   }
+  return {
+    statusCode: 200,
+    body: result.title
+  };
+}
+
+async function set_green_has_signed_cla (ow, args) {
+  let result;
+  try {
+    result = await ow.actions.invoke({
+      name: utils.SETGITHUBCHECK,
+      blocking: true,
+      result: true,
+      params: {
+        installation_id: args.installation_id,
+        org: args.org,
+        repo: args.repo,
+        sha: args.commit_sha,
+        status: 'completed',
+        start_time: args.start_time,
+        conclusion: 'success',
+        title: 'CLA Signed',
+        summary: 'A Signed CLA has been found for the GitHub.com user ' + args.user
+      }
+    });
+  } catch (e) {
+    return utils.action_error(e, 'Error invoking setgithubcheck when CLA was found.');
+  }
+
   return {
     statusCode: 200,
     body: result.title

@@ -10,7 +10,6 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const request = require('request-promise-native');
 const parse = require('util').promisify(require('csv-parse'));
 const utils = require('../utils.js');
 const config = utils.get_config();
@@ -70,15 +69,20 @@ async function lookup (args) {
 }
 
 async function lookupSingleAgreement (args, agreement) {
-  const options = {
+  const fetchResponse = await fetch(`https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`, {
     method: 'GET',
-    url: `https://api.na1.echosign.com:443/api/rest/${args.apiVersion}/agreements/${agreement}/formData`,
     headers: {
       'cache-control': 'no-cache',
       Authorization: 'Bearer ' + args.access_token
     }
-  };
-  const response = await request(options);
+  });
+
+  if (!fetchResponse.ok) {
+    throw new Error(`Error: ${fetchResponse.status} - ${fetchResponse.statusText}`);
+  }
+
+  const response = await fetchResponse.text();
+
   // Logic to parse CSV and get the value for Custom Field 8 or Custom Field 1 or githubUsername
   const records = await parse(response.trim(), { columns: true });
   let usernames = [];
